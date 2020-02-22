@@ -34,9 +34,10 @@ namespace Cinteros.Xrm.FetchXmlBuilder.DockControls
             {
                 this.EnsureVisible(form.dockContainer, form.settings.DockStates.ResultView);
             }
+            ArrangeColumns();
             crmGridView1.DataSource = entities;
             crmGridView1.Refresh();
-            ArrangeColumns();
+            crmGridView1.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.DisplayedCells);
         }
 
         private void ArrangeColumns()
@@ -45,16 +46,19 @@ namespace Cinteros.Xrm.FetchXmlBuilder.DockControls
             {
                 return;
             }
-            var pos = 2;
-            foreach (var attribute in queryinfo.AttributesSignature?.Split('\n').Select(a => a.Trim()).Where(a => !string.IsNullOrWhiteSpace(a)))
+
+            for (var i = crmGridView1.Columns.Count - 1; i >= 0; i--)
             {
-                if (crmGridView1.Columns.Contains(attribute))
+                if (crmGridView1.Columns[i].Name != "#entity")
                 {
-                    crmGridView1.Columns[attribute].DisplayIndex = pos;
-                    pos++;
+                    crmGridView1.Columns.RemoveAt(i);
                 }
             }
-            crmGridView1.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.DisplayedCells);
+
+            foreach (var attribute in queryinfo.AttributesSignature?.Split('\n').Select(a => a.Trim()).Where(a => !string.IsNullOrWhiteSpace(a)))
+            {
+                crmGridView1.Columns.Add(attribute, attribute);
+            }
         }
 
         private void ApplySettingsToGrid()

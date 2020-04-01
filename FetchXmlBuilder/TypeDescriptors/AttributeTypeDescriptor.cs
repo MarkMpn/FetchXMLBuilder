@@ -13,23 +13,22 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
 {
     class AttributeTypeDescriptor : CustomTypeDescriptor
     {
-        private TreeNode node;
-        private AttributeMetadata[] attributes;
-        private TreeBuilderControl tree;
+        private TreeNode _node;
+        private AttributeMetadata[] _attributes;
+        private TreeBuilderControl _tree;
 
         public AttributeTypeDescriptor(TreeNode node, AttributeMetadata[] attributes, TreeBuilderControl tree)
         {
-            this.node = node;
-            this.attributes = attributes;
-            this.tree = tree;
-
+            _node = node;
+            _attributes = attributes;
+            _tree = tree;
         }
 
         public override PropertyDescriptorCollection GetProperties()
         {
-            var aggregate = tree.GetFetchType().aggregateSpecified && tree.GetFetchType().aggregate;
+            var aggregate = _tree.GetFetchType().aggregateSpecified && _tree.GetFetchType().aggregate;
 
-            var dictionary = (Dictionary<string, string>)node.Tag;
+            var dictionary = (Dictionary<string, string>)_node.Tag;
             
             var nameProp = new AttributePropertyDescriptor(
                 "(Name)",
@@ -43,11 +42,11 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 String.Empty,
                 dictionary,
                 "name",
-                tree,
-                attributes);
+                _tree,
+                _attributes);
 
             var attributeName = (string) nameProp.GetValue(this);
-            var attr = attributes?.SingleOrDefault(a => a.LogicalName == attributeName);
+            var attr = _attributes?.SingleOrDefault(a => a.LogicalName == attributeName);
 
             var aliasProp = new CustomPropertyDescriptor<string>(
                 "Alias",
@@ -58,7 +57,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 String.Empty,
                 dictionary,
                 "alias",
-                tree);
+                _tree);
 
             var groupByProp = new CustomPropertyDescriptor<bool>(
                 "Group By",
@@ -72,7 +71,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 false,
                 dictionary,
                 "groupby",
-                tree);
+                _tree);
 
             var groupBy = (bool?)groupByProp.GetValue(this);
 
@@ -88,7 +87,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 null,
                 dictionary,
                 "aggregate",
-                tree);
+                _tree);
 
             var aggregateType = (AggregateType?)aggregateProp.GetValue(this);
 
@@ -104,7 +103,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 false,
                 dictionary,
                 "distinct",
-                tree);
+                _tree);
 
             var userTimeZoneProp = new CustomPropertyDescriptor<bool>
                 (
@@ -119,7 +118,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 false,
                 dictionary,
                 "usertimezone",
-                tree);
+                _tree);
 
             var dateGroupingProp = new CustomPropertyDescriptor<DateGroupingType?>(
                 "Date Grouping",
@@ -133,7 +132,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 null,
                 dictionary,
                 "dategrouping",
-                tree);
+                _tree);
 
             return new PropertyDescriptorCollection(new PropertyDescriptor[] { nameProp, aliasProp, aggregateProp, groupByProp, distinctProp, userTimeZoneProp, dateGroupingProp });
         }
@@ -147,7 +146,5 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
         {
             return this;
         }
-
-        public AttributeMetadata[] Attributes => attributes;
     }
 }

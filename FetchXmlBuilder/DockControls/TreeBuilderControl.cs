@@ -1,12 +1,14 @@
 ﻿using Cinteros.Xrm.FetchXmlBuilder.AppCode;
 using Cinteros.Xrm.FetchXmlBuilder.Controls;
 using Cinteros.Xrm.FetchXmlBuilder.Forms;
+using Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors;
 using Cinteros.Xrm.XmlEditorUtils;
 using Microsoft.Crm.Sdk.Messages;
 using Microsoft.Xrm.Sdk.Metadata;
 using Microsoft.Xrm.Sdk.Query;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -481,8 +483,10 @@ namespace Cinteros.Xrm.FetchXmlBuilder.DockControls
                     return;
                 }
 
-                UserControl ctrl = null;
+                Control ctrl = null;
                 Control existingControl = panelContainer.Controls.Count > 0 ? panelContainer.Controls[0] : null;
+                CustomTypeDescriptor descriptor = null;
+
                 if (node != null)
                 {
                     TreeNodeHelper.AddContextMenu(node, this);
@@ -551,6 +555,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.DockControls
                                         if (node.Name == "attribute")
                                         {
                                             ctrl = new attributeControl(node, attributes, fxb, this);
+                                            descriptor = new AttributeTypeDescriptor(node, attributes, this);
                                         }
                                         else if (node.Name == "order")
                                         {
@@ -583,6 +588,11 @@ namespace Cinteros.Xrm.FetchXmlBuilder.DockControls
                             }
                             break;
                     }
+                }
+                if (descriptor != null)
+                {
+                    ctrl = new PropertyGrid { SelectedObject = descriptor };
+                    ctrl.Site = new BasicSite();
                 }
                 if (ctrl != null)
                 {

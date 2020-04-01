@@ -38,8 +38,13 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
 
         private void ValidateProperty(ITypeDescriptorContext context, PropertyDescriptor propDesc, ArrayList valueUIItemList)
         {
-            if (propDesc is AttributePropertyDescriptor attr && !attr.Attributes.Any(a => a.LogicalName == (string)attr.GetValue(context.Instance)))
+            if (propDesc is IValidatingPropertyDescriptor validating)
             {
+                var msg = validating.GetValidationError(context);
+
+                if (msg == null)
+                    return;
+
                 var image = new Bitmap(8, 8);
 
                 using (var g = Graphics.FromImage(image))
@@ -48,7 +53,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                     g.DrawImage(SystemIcons.Warning.ToBitmap(), new Rectangle(Point.Empty, image.Size));
                 }
 
-                valueUIItemList.Add(new PropertyValueUIItem(image, NoOp, "Unknown attribute"));
+                valueUIItemList.Add(new PropertyValueUIItem(image, NoOp, msg));
             }
         }
 

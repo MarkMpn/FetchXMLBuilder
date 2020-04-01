@@ -25,7 +25,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
             var listBox = new ListBox();
             listBox.BorderStyle = BorderStyle.None;
 
-            foreach (var attr in descriptor.Attributes.OrderBy(a => a.LogicalName))
+            foreach (var attr in descriptor.AttributeMetadata.OrderBy(a => a.LogicalName))
                 listBox.Items.Add(attr.LogicalName);
 
             listBox.SelectedItem = value;

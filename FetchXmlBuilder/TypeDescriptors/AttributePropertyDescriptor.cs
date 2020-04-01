@@ -15,7 +15,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
         public AttributePropertyDescriptor(string name, string category, string description, Attribute[] attrs, object owner, string defaultValue, Dictionary<string,string> dictionary, string key, TreeBuilderControl tree, AttributeMetadata[] attributes) :
             base(name, category, description, CreateAttributes(attrs), owner, defaultValue, dictionary, key, tree)
         {
-            Attributes = attributes;
+            AttributeMetadata = attributes;
         }
 
         static Attribute[] CreateAttributes(Attribute[] attributes)
@@ -25,6 +25,14 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
             return attrs.ToArray();
         }
 
-        public AttributeMetadata[] Attributes { get; }
+        public AttributeMetadata[] AttributeMetadata { get; }
+
+        public override string GetValidationError(ITypeDescriptorContext context)
+        {
+            if (Attributes != null && !AttributeMetadata.Any(a => a.LogicalName == (string)GetValue(context.Instance)))
+                return "Unknown attribute";
+
+            return base.GetValidationError(context);
+        }
     }
 }

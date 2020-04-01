@@ -345,6 +345,7 @@
     <Compile Include="TypeDescriptors\AttributeTypeDescriptor.cs" />
     <Compile Include="TypeDescriptors\BasicSite.cs" />
     <Compile Include="TypeDescriptors\CustomPropertyDescriptor.cs" />
+    <Compile Include="TypeDescriptors\IValidatingPropertyDescriptor.cs" />
     <Compile Include="TypeDescriptors\PropertyValueUIService.cs" />
   </ItemGroup>
   <ItemGroup>

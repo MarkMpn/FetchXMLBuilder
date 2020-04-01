@@ -113,5 +113,10 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
         {
             return _dictionary.ContainsKey(_key);
         }
+
+        public virtual string GetValidationError(ITypeDescriptorContext context)
+        {
+            return null;
+        }
     }
 }

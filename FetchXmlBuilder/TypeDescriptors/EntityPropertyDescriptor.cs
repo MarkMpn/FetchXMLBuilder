@@ -5,6 +5,8 @@ using System.Drawing.Design;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.Windows.Forms.Design;
 using Cinteros.Xrm.FetchXmlBuilder.Controls;
 using Cinteros.Xrm.FetchXmlBuilder.DockControls;
 using Microsoft.Xrm.Sdk.Metadata;
@@ -30,10 +32,39 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
 
         public override string GetValidationError(ITypeDescriptorContext context)
         {
-            if (Entities != null && !Entities.Any(e => e.ToString() == (string)GetValue(context.Instance)))
+            var entityName = (string)GetValue(context.Instance);
+
+            if (!String.IsNullOrEmpty(entityName) && Entities != null && !Entities.Any(e => e != null && e.ToString() == entityName))
                 return "Unknown entity";
 
             return base.GetValidationError(context);
+        }
+        class EntitySelector : UITypeEditor
+        {
+            public override UITypeEditorEditStyle GetEditStyle(ITypeDescriptorContext context)
+            {
+                return UITypeEditorEditStyle.DropDown;
+            }
+
+            public override object EditValue(ITypeDescriptorContext context, IServiceProvider provider, object value)
+            {
+                var descriptor = (EntityPropertyDescriptor)context.PropertyDescriptor;
+                var svc = (IWindowsFormsEditorService)provider.GetService(typeof(IWindowsFormsEditorService));
+
+                var listBox = new ListBox();
+                listBox.BorderStyle = BorderStyle.None;
+
+                foreach (var entity in descriptor.Entities.OrderBy(a => a?.ToString()))
+                    listBox.Items.Add(entity);
+
+                listBox.SelectedItem = value;
+                listBox.DoubleClick += (s, e) => svc.CloseDropDown();
+                listBox.KeyPress += (s, e) => { if (e.KeyChar == '\r') svc.CloseDropDown(); };
+
+                svc.DropDownControl(listBox);
+
+                return ((EntityNode)listBox.SelectedItem)?.ToString();
+            }
         }
     }
 }

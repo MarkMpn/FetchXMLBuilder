@@ -7,7 +7,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.AppCode
 {
     public class OperatorItem : IComboBoxItem
     {
-        private ConditionOperator oper = ConditionOperator.Equal;
+        public ConditionOperator Operator { get; }
 
         /// <summary>Property that indicates what type the value must have for the condition to be valid</summary>
         public AttributeTypeCode? ValueType { get { return GetValueType(); } }
@@ -18,14 +18,14 @@ namespace Cinteros.Xrm.FetchXmlBuilder.AppCode
         /// <summary>Property that indicates what type the attribute must be of for the condition to be valid</summary>
         public AttributeTypeCode? AttributeType { get { return GetAttributeType(); } }
 
-        public OperatorItem(ConditionOperator Operator)
+        public OperatorItem(ConditionOperator op)
         {
-            oper = Operator;
+            Operator = op;
         }
 
         public string GetValue()
         {
-            switch (oper)
+            switch (Operator)
             {
                 case ConditionOperator.Equal:
                     return "eq";
@@ -70,7 +70,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.AppCode
                 case ConditionOperator.UnderOrEqual:
                     return "eq-or-under";
             }
-            var coname = oper.ToString();
+            var coname = Operator.ToString();
             if (coname.StartsWith("OlderThan"))
             {   // "olderthan" is written together, not "older-than" in fetchxml
                 coname = coname.Replace("OlderThan", "Olderthan");
@@ -93,7 +93,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.AppCode
 
         public override string ToString()
         {
-            return System.Enum.GetName(typeof(ConditionOperator), oper);
+            return System.Enum.GetName(typeof(ConditionOperator), Operator);
         }
 
         private AttributeTypeCode? GetValueType()
@@ -101,7 +101,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.AppCode
             // Default type to indicate "it depends on the attribute"
             AttributeTypeCode? result = AttributeTypeCode.ManagedProperty;
 
-            switch (oper)
+            switch (Operator)
             {
                 case ConditionOperator.EqualUserId:
                 case ConditionOperator.NotEqualUserId:
@@ -182,7 +182,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.AppCode
         private bool GetIsMultipleValuesType()
         {
             var result = false;
-            switch (oper)
+            switch (Operator)
             {
                 case ConditionOperator.In:
                 case ConditionOperator.NotIn:
@@ -202,7 +202,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.AppCode
             // Default type to indicate "it depends on the attribute"
             AttributeTypeCode? result = null;
 
-            switch (oper)
+            switch (Operator)
             {
                 case ConditionOperator.EqualUserId:
                 case ConditionOperator.NotEqualUserId:
@@ -271,7 +271,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.AppCode
             return result;
         }
 
-        public static OperatorItem[] GetConditionsByAttributeType(AttributeTypeCode valueType)
+        public static OperatorItem[] GetConditionsByAttributeType(AttributeTypeCode? valueType)
         {
             var validConditionsList = new List<OperatorItem>
             {
@@ -316,7 +316,8 @@ namespace Cinteros.Xrm.FetchXmlBuilder.AppCode
                 valueType == AttributeTypeCode.BigInt ||
                 valueType == AttributeTypeCode.Decimal ||
                 valueType == AttributeTypeCode.Double ||
-                valueType == AttributeTypeCode.Money)
+                valueType == AttributeTypeCode.Money ||
+                valueType == null)
             {
                 validConditionsList.Add(new OperatorItem(ConditionOperator.Between));
                 validConditionsList.Add(new OperatorItem(ConditionOperator.NotBetween));
@@ -325,86 +326,92 @@ namespace Cinteros.Xrm.FetchXmlBuilder.AppCode
                 validConditionsList.Add(new OperatorItem(ConditionOperator.LessThan));
                 validConditionsList.Add(new OperatorItem(ConditionOperator.LessEqual));
             }
-            switch (valueType)
+
+            if (valueType == AttributeTypeCode.DateTime ||
+                valueType == null)
             {
-                case AttributeTypeCode.DateTime:
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.InFiscalPeriod));
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.InFiscalPeriodAndYear));
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.InFiscalYear));
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.InOrAfterFiscalPeriodAndYear));
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.InOrBeforeFiscalPeriodAndYear));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.InFiscalPeriod));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.InFiscalPeriodAndYear));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.InFiscalYear));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.InOrAfterFiscalPeriodAndYear));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.InOrBeforeFiscalPeriodAndYear));
 
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.Last7Days));
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.LastFiscalPeriod));
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.LastFiscalYear));
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.LastMonth));
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.LastWeek));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.Last7Days));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.LastFiscalPeriod));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.LastFiscalYear));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.LastMonth));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.LastWeek));
 
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.LastXDays));
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.LastXFiscalPeriods));
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.LastXFiscalYears));
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.LastXHours));
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.LastXMonths));
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.LastXWeeks));
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.LastXYears));
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.LastYear));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.LastXDays));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.LastXFiscalPeriods));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.LastXFiscalYears));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.LastXHours));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.LastXMonths));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.LastXWeeks));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.LastXYears));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.LastYear));
 
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.Next7Days));
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.NextFiscalPeriod));
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.NextFiscalYear));
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.NextMonth));
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.NextWeek));
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.NextXDays));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.Next7Days));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.NextFiscalPeriod));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.NextFiscalYear));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.NextMonth));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.NextWeek));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.NextXDays));
 
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.NextXFiscalPeriods));
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.NextXFiscalYears));
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.NextXHours));
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.NextXMonths));
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.NextXWeeks));
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.NextXYears));
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.NextYear));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.NextXFiscalPeriods));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.NextXFiscalYears));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.NextXHours));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.NextXMonths));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.NextXWeeks));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.NextXYears));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.NextYear));
 
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.OlderThanXYears));
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.OlderThanXMonths));
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.OlderThanXWeeks));
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.OlderThanXDays));
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.OlderThanXHours));
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.OlderThanXMinutes));
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.On));
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.OnOrAfter));
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.OnOrBefore));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.OlderThanXYears));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.OlderThanXMonths));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.OlderThanXWeeks));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.OlderThanXDays));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.OlderThanXHours));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.OlderThanXMinutes));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.On));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.OnOrAfter));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.OnOrBefore));
 
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.ThisFiscalPeriod));
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.ThisFiscalYear));
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.ThisMonth));
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.ThisWeek));
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.ThisYear));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.ThisFiscalPeriod));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.ThisFiscalYear));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.ThisMonth));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.ThisWeek));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.ThisYear));
 
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.Today));
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.Tomorrow));
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.Yesterday));
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.NotOn));
-
-                    break;
-                case AttributeTypeCode.Uniqueidentifier:
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.Above));
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.AboveOrEqual));
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.Under));
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.UnderOrEqual));
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.NotUnder));
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.EqualBusinessId));
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.EqualUserId));
-                    break;
-                case AttributeTypeCode.Owner:
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.EqualBusinessId));
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.EqualUserId));
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.NotEqualUserId));
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.EqualUserOrUserHierarchy));
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.EqualUserOrUserHierarchyAndTeams));
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.EqualUserOrUserTeams));
-                    validConditionsList.Add(new OperatorItem(ConditionOperator.EqualUserTeams));
-                    break;
+                validConditionsList.Add(new OperatorItem(ConditionOperator.Today));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.Tomorrow));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.Yesterday));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.NotOn));
             }
+
+            if (valueType == AttributeTypeCode.Uniqueidentifier ||
+                valueType == null)
+            {
+                validConditionsList.Add(new OperatorItem(ConditionOperator.Above));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.AboveOrEqual));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.Under));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.UnderOrEqual));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.NotUnder));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.EqualBusinessId));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.EqualUserId));
+            }
+
+            if (valueType == AttributeTypeCode.Owner ||
+                valueType == null)
+            {
+                validConditionsList.Add(new OperatorItem(ConditionOperator.EqualBusinessId));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.EqualUserId));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.NotEqualUserId));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.EqualUserOrUserHierarchy));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.EqualUserOrUserHierarchyAndTeams));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.EqualUserOrUserTeams));
+                validConditionsList.Add(new OperatorItem(ConditionOperator.EqualUserTeams));
+            }
+
             return validConditionsList.ToArray();
         }
     }

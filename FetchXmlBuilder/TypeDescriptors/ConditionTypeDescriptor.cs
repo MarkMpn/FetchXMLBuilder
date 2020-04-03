@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Cinteros.Xrm.FetchXmlBuilder.Controls;
 using Cinteros.Xrm.FetchXmlBuilder.DockControls;
+using Microsoft.Xrm.Sdk.Query;
 
 namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
 {
@@ -34,11 +35,11 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 entities.Add(null);
                 entities.AddRange(GetEntities(_tree.tvFetch.Nodes[0]).ToArray());
             }
-            var entityReadOnly = entities.Count == 0;
+            var entityReadOnly = entities.Count <= 1;
 
             var entityProp = new EntityPropertyDescriptor(
-                "(Entity)",
-                "(Condition)",
+                "Entity",
+                "Condition",
                 "The name or alias of the entity to apply the condition to",
                 new Attribute[]
                 {
@@ -53,21 +54,20 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 entities.ToArray());
 
             var entity = (string)entityProp.GetValue(this);
-            var entityNode = entities.FirstOrDefault(e => e.ToString() == entity);
+            var entityNode = entities.FirstOrDefault(e => e != null && e.ToString() == entity);
             if (entityNode == null)
                 entityNode = new EntityNode(GetClosestEntityNode());
 
             var entityName = entityNode.EntityName;
             if (_fxb.NeedToLoadEntity(entityName))
             {
-                // TODO: Load async within editor control
-                _fxb.LoadEntityDetails(entityName, null, false);
+                _fxb.LoadEntityDetails(entityName, () => _tree.RefreshSelectedNode());
             }
             var attributes = _fxb.GetDisplayAttributes(entityName);
 
             var attributeProp = new AttributePropertyDescriptor(
-                "(Attribute)",
-                "(Condition)",
+                "Attribute",
+                "Condition",
                 "The logical name of the attribute to apply the condition to",
                 new Attribute[]
                 {
@@ -80,7 +80,25 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 _tree,
                 attributes);
 
-            return new PropertyDescriptorCollection(new PropertyDescriptor[] { entityProp, attributeProp });
+            var attributeName = (string) attributeProp.GetValue(this);
+            var attribute = attributes.SingleOrDefault(a => a.LogicalName == attributeName);
+
+            var operatorProp = new ConditionOperatorPropertyDescriptor(
+                "Operator",
+                "Condition",
+                "The comparison operator to apply",
+                new Attribute[]
+                {
+                    new RefreshPropertiesAttribute(RefreshProperties.All)
+                },
+                this,
+                ConditionOperator.Equal,
+                dictionary,
+                "operator",
+                _tree,
+                attribute);
+
+            return new PropertyDescriptorCollection(new PropertyDescriptor[] { entityProp, attributeProp, operatorProp });
         }
 
         public override PropertyDescriptorCollection GetProperties(Attribute[] attributes)

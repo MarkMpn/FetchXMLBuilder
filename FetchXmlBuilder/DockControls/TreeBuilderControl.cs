@@ -651,7 +651,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.DockControls
                                               selectedNode.Index != selectedNode.Parent.Nodes.Count - 1;
         }
 
-        private void RefreshSelectedNode()
+        public void RefreshSelectedNode()
         {
             HandleNodeSelection(tvFetch.SelectedNode);
         }

@@ -8,7 +8,7 @@ using Cinteros.Xrm.FetchXmlBuilder.DockControls;
 
 namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
 {
-    class CustomPropertyDescriptor<T> : PropertyDescriptor
+    class CustomPropertyDescriptor<T> : PropertyDescriptor, IValidatingPropertyDescriptor
     {
         private object _owner;
         private T _defaultValue;
@@ -73,15 +73,34 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
 
             try
             {
-                if (targetType.IsEnum)
-                    return Enum.Parse(targetType, str);
-
-                return (T)Convert.ChangeType(str, targetType);
+                return ConvertValue(targetType, str);
             }
             catch
             {
                 return _defaultValue;
             }
+        }
+
+        protected virtual object ConvertValue(Type targetType, object value)
+        {
+            if (value == null)
+                return null;
+
+            if (value.GetType() == targetType)
+                return value;
+
+            if (targetType == typeof(string))
+            {
+                if (value is bool b)
+                    return b ? "true" : "false";
+
+                return value.ToString();
+            }
+
+            if (value is string str && targetType.IsEnum)
+                return Enum.Parse(targetType, str);
+
+            return Convert.ChangeType(value, targetType);
         }
 
         public override void ResetValue(object component)
@@ -98,11 +117,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
             }
             else
             {
-                var str = value.ToString();
-
-                if (value is bool b)
-                    str = b ? "true" : "false";
-
+                var str = (string)ConvertValue(typeof(string), value);
                 _dictionary[_key] = str;
             }
 

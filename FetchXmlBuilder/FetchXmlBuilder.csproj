@@ -340,7 +340,7 @@
       <DependentUpon>fetch.xsd</DependentUpon>
     </Compile>
     <Compile Include="AppCode\SQLQueryGenerator.cs" />
-    <Compile Include="TypeDescriptors\EntitySelector.cs" />
+    <Compile Include="TypeDescriptors\ConditionOperatorPropertyDescriptor.cs" />
     <Compile Include="TypeDescriptors\EntityPropertyDescriptor.cs" />
     <Compile Include="TypeDescriptors\AttributePropertyDescriptor.cs" />
     <Compile Include="TypeDescriptors\AttributeSelector.cs" />

@@ -5,8 +5,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Cinteros.Xrm.FetchXmlBuilder.AppCode;
 using Cinteros.Xrm.FetchXmlBuilder.Controls;
 using Cinteros.Xrm.FetchXmlBuilder.DockControls;
+using Microsoft.Xrm.Sdk.Metadata;
 using Microsoft.Xrm.Sdk.Query;
 
 namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
@@ -16,6 +18,30 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
         private TreeNode _node;
         private FetchXmlBuilder _fxb;
         private TreeBuilderControl _tree;
+        private static IDictionary<AttributeTypeCode, Type> _attributeTypes;
+
+        static ConditionTypeDescriptor()
+        {
+            _attributeTypes = new Dictionary<AttributeTypeCode, Type>
+            {
+                [AttributeTypeCode.BigInt] = typeof(long),
+                [AttributeTypeCode.Boolean] = typeof(bool),
+                [AttributeTypeCode.Customer] = typeof(Guid),
+                [AttributeTypeCode.DateTime] = typeof(DateTime),
+                [AttributeTypeCode.Decimal] = typeof(decimal),
+                [AttributeTypeCode.Double] = typeof(double),
+                [AttributeTypeCode.Integer] = typeof(int),
+                [AttributeTypeCode.Lookup] = typeof(Guid),
+                [AttributeTypeCode.Memo] = typeof(string),
+                [AttributeTypeCode.Money] = typeof(decimal),
+                [AttributeTypeCode.Owner] = typeof(Guid),
+                [AttributeTypeCode.Picklist] = typeof(int),
+                [AttributeTypeCode.State] = typeof(int),
+                [AttributeTypeCode.Status] = typeof(int),
+                [AttributeTypeCode.String] = typeof(string),
+                [AttributeTypeCode.Uniqueidentifier] = typeof(Guid)
+            };
+        }
 
         public ConditionTypeDescriptor(TreeNode node, FetchXmlBuilder fxb, TreeBuilderControl tree)
         {
@@ -98,7 +124,41 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 _tree,
                 attribute);
 
-            return new PropertyDescriptorCollection(new PropertyDescriptor[] { entityProp, attributeProp, operatorProp });
+            // Value property varies depending on the attribute and/or operator
+            var op = (ConditionOperator)operatorProp.GetValue(this);
+            var oper = new OperatorItem(op);
+            var valueType = oper.ValueType;
+            PropertyDescriptor valueProp = null;
+
+            if (valueType != null)
+            {
+                if (valueType == AttributeTypeCode.ManagedProperty)
+                {
+                    // Type is dependant on the attribute type
+                    valueType = attribute?.AttributeType ?? AttributeTypeCode.String;
+                }
+
+                if (_attributeTypes.TryGetValue(valueType.Value, out var convertedValueType))
+                {
+                    var propertyDescriptorType = typeof(ConditionValuePropertyDescriptor<>).MakeGenericType(convertedValueType);
+                    valueProp = (PropertyDescriptor)Activator.CreateInstance(propertyDescriptorType,
+                        "Value",
+                        "Condition",
+                        "The value to compare the attribute to",
+                        Array.Empty<Attribute>(),
+                        this,
+                        null,
+                        dictionary,
+                        "value",
+                        _tree,
+                        attribute);
+                }
+            }
+
+            if (valueProp == null)
+                return new PropertyDescriptorCollection(new PropertyDescriptor[] { entityProp, attributeProp, operatorProp });
+            else
+                return new PropertyDescriptorCollection(new PropertyDescriptor[] { entityProp, attributeProp, operatorProp, valueProp });
         }
 
         public override PropertyDescriptorCollection GetProperties(Attribute[] attributes)

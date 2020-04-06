@@ -8,7 +8,7 @@ using Cinteros.Xrm.FetchXmlBuilder.DockControls;
 
 namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
 {
-    class CustomPropertyDescriptor<T> : PropertyDescriptor, IValidatingPropertyDescriptor
+    class CustomPropertyDescriptor<T> : PropertyDescriptor, IValidatingPropertyDescriptor, ITypeConvertingPropertyDescriptor
     {
         private object _owner;
         private T _defaultValue;
@@ -81,7 +81,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
             }
         }
 
-        protected virtual object ConvertValue(Type targetType, object value)
+        public virtual object ConvertValue(Type targetType, object value)
         {
             if (value == null)
                 return null;
@@ -93,6 +93,9 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
             {
                 if (value is bool b)
                     return b ? "true" : "false";
+
+                if (value is DateTime dt)
+                    return dt.ToString("yyyy-MM-dd HH:mm:ss");
 
                 return value.ToString();
             }

@@ -29,7 +29,12 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
 
         public AttributeMetadata AttributeMetadata { get; }
 
-        protected override object ConvertValue(Type targetType, object value)
+        public override bool ShouldSerializeValue(object component)
+        {
+            return true;
+        }
+
+        public override object ConvertValue(Type targetType, object value)
         {
             if (targetType == typeof(ConditionOperator) && value is string str)
             {

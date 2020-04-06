@@ -140,6 +140,9 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
 
                 if (_attributeTypes.TryGetValue(valueType.Value, out var convertedValueType))
                 {
+                    if (oper.IsMultipleValuesType)
+                        convertedValueType = convertedValueType.MakeArrayType();
+
                     var propertyDescriptorType = typeof(ConditionValuePropertyDescriptor<>).MakeGenericType(convertedValueType);
                     valueProp = (PropertyDescriptor)Activator.CreateInstance(propertyDescriptorType,
                         "Value",
@@ -151,7 +154,9 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                         dictionary,
                         "value",
                         _tree,
-                        attribute);
+                        attribute,
+                        _node,
+                        _fxb);
                 }
             }
 

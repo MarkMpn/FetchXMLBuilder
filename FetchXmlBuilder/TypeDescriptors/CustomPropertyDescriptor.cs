@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Cinteros.Xrm.FetchXmlBuilder.DockControls;
+using Microsoft.Xrm.Sdk;
 
 namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
 {
@@ -97,11 +98,20 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 if (value is DateTime dt)
                     return dt.ToString("yyyy-MM-dd HH:mm:ss");
 
+                if (value is Lookup lookup)
+                    value = lookup.EntityReference.Id;
+
                 return value.ToString();
             }
 
-            if (value is string str && targetType.IsEnum)
-                return Enum.Parse(targetType, str);
+            if (value is string str)
+            {
+                if (targetType.IsEnum)
+                    return Enum.Parse(targetType, str);
+
+                if (targetType == typeof(Lookup))
+                    return new Lookup { EntityReference = new EntityReference(null, Guid.Parse(str)) };
+            }
 
             return Convert.ChangeType(value, targetType);
         }
@@ -122,6 +132,19 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
             {
                 var str = (string)ConvertValue(typeof(string), value);
                 _dictionary[_key] = str;
+
+                if (value is Lookup lookup)
+                {
+                    if (!String.IsNullOrEmpty(lookup.EntityReference.LogicalName))
+                        _dictionary["uiType"] = lookup.EntityReference.LogicalName;
+                    else
+                        _dictionary.Remove("uiType");
+
+                    if (!String.IsNullOrEmpty(lookup.EntityReference.Name))
+                        _dictionary["uiDisplayName"] = lookup.EntityReference.Name;
+                    else
+                        _dictionary.Remove("uiDisplayName");
+                }
             }
 
             _tree.CtrlSaved(this, new XmlEditorUtils.SaveEventArgs { AttributeCollection = _dictionary });

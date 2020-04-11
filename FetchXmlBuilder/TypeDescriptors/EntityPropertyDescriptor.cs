@@ -24,7 +24,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
         static Attribute[] CreateAttributes(Attribute[] attributes)
         {
             var attrs = new List<Attribute>(attributes);
-            attrs.Add(new EditorAttribute(typeof(EntitySelector), typeof(UITypeEditor)));
+            attrs.Add(new TypeConverterAttribute(typeof(EntityConverter)));
             return attrs.ToArray();
         }
 
@@ -39,31 +39,24 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
 
             return base.GetValidationError(context);
         }
-        class EntitySelector : UITypeEditor
+
+        class EntityConverter : TypeConverter
         {
-            public override UITypeEditorEditStyle GetEditStyle(ITypeDescriptorContext context)
+            public override bool GetStandardValuesSupported(ITypeDescriptorContext context)
             {
-                return UITypeEditorEditStyle.DropDown;
+                return true;
             }
 
-            public override object EditValue(ITypeDescriptorContext context, IServiceProvider provider, object value)
+            public override bool GetStandardValuesExclusive(ITypeDescriptorContext context)
+            {
+                return false;
+            }
+
+            public override StandardValuesCollection GetStandardValues(ITypeDescriptorContext context)
             {
                 var descriptor = (EntityPropertyDescriptor)context.PropertyDescriptor;
-                var svc = (IWindowsFormsEditorService)provider.GetService(typeof(IWindowsFormsEditorService));
 
-                var listBox = new ListBox();
-                listBox.BorderStyle = BorderStyle.None;
-
-                foreach (var entity in descriptor.Entities.OrderBy(a => a?.ToString()))
-                    listBox.Items.Add(entity);
-
-                listBox.SelectedItem = value;
-                listBox.DoubleClick += (s, e) => svc.CloseDropDown();
-                listBox.KeyPress += (s, e) => { if (e.KeyChar == '\r') svc.CloseDropDown(); };
-
-                svc.DropDownControl(listBox);
-
-                return ((EntityNode)listBox.SelectedItem)?.ToString();
+                return new StandardValuesCollection(descriptor.Entities.OrderBy(a => a?.ToString()).Select(a => a?.ToString()).ToArray());
             }
         }
     }

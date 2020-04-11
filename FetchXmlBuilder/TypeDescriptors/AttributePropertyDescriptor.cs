@@ -21,7 +21,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
         static Attribute[] CreateAttributes(Attribute[] attributes)
         {
             var attrs = new List<Attribute>(attributes);
-            attrs.Add(new EditorAttribute(typeof(AttributeSelector), typeof(UITypeEditor)));
+            attrs.Add(new TypeConverterAttribute(typeof(AttributeConverter)));
             return attrs.ToArray();
         }
 
@@ -33,6 +33,26 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 return "Unknown attribute";
 
             return base.GetValidationError(context);
+        }
+
+        class AttributeConverter : TypeConverter
+        {
+            public override bool GetStandardValuesSupported(ITypeDescriptorContext context)
+            {
+                return true;
+            }
+
+            public override bool GetStandardValuesExclusive(ITypeDescriptorContext context)
+            {
+                return false;
+            }
+
+            public override StandardValuesCollection GetStandardValues(ITypeDescriptorContext context)
+            {
+                var descriptor = (AttributePropertyDescriptor)context.PropertyDescriptor;
+
+                return new StandardValuesCollection(descriptor.AttributeMetadata.OrderBy(a => a.LogicalName).Select(a => a.LogicalName).ToArray());
+            }
         }
     }
 }

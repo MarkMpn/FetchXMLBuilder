@@ -8,6 +8,7 @@ using System.Windows.Forms;
 using Cinteros.Xrm.FetchXmlBuilder.AppCode;
 using Cinteros.Xrm.FetchXmlBuilder.Controls;
 using Cinteros.Xrm.FetchXmlBuilder.DockControls;
+using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Metadata;
 using Microsoft.Xrm.Sdk.Query;
 
@@ -26,20 +27,20 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
             {
                 [AttributeTypeCode.BigInt] = typeof(long),
                 [AttributeTypeCode.Boolean] = typeof(bool),
-                [AttributeTypeCode.Customer] = typeof(Guid),
+                [AttributeTypeCode.Customer] = typeof(Lookup),
                 [AttributeTypeCode.DateTime] = typeof(DateTime),
                 [AttributeTypeCode.Decimal] = typeof(decimal),
                 [AttributeTypeCode.Double] = typeof(double),
                 [AttributeTypeCode.Integer] = typeof(int),
-                [AttributeTypeCode.Lookup] = typeof(Guid),
+                [AttributeTypeCode.Lookup] = typeof(Lookup),
                 [AttributeTypeCode.Memo] = typeof(string),
                 [AttributeTypeCode.Money] = typeof(decimal),
-                [AttributeTypeCode.Owner] = typeof(Guid),
+                [AttributeTypeCode.Owner] = typeof(Lookup),
                 [AttributeTypeCode.Picklist] = typeof(int),
                 [AttributeTypeCode.State] = typeof(int),
                 [AttributeTypeCode.Status] = typeof(int),
                 [AttributeTypeCode.String] = typeof(string),
-                [AttributeTypeCode.Uniqueidentifier] = typeof(Guid)
+                [AttributeTypeCode.Uniqueidentifier] = typeof(Lookup)
             };
         }
 

@@ -12,6 +12,7 @@ using System.Windows.Forms;
 using System.Windows.Forms.Design;
 using Cinteros.Xrm.FetchXmlBuilder.AppCode;
 using Cinteros.Xrm.FetchXmlBuilder.DockControls;
+using Cinteros.Xrm.FetchXmlBuilder.Forms;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Metadata;
 using Microsoft.Xrm.Sdk.Query;
@@ -74,6 +75,8 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
             }
         }
 
+        public IOrganizationService Service => _fxb.Service;
+
         public override object GetValue(object component)
         {
             if (typeof(T).IsArray)
@@ -82,8 +85,22 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 var value = _node.Nodes
                     .Cast<TreeNode>()
                     .Select(n => (Dictionary<string,string>) n.Tag)
-                    .Select(dic => dic["#text"])
-                    .Select(val => ConvertValue(elementType, val))
+                    .Select(dic =>
+                    {
+                        var text = dic["#text"];
+                        var val = ConvertValue(elementType, text);
+
+                        if (val is Lookup lookup)
+                        {
+                            dic.TryGetValue("uitype", out var uitype);
+                            dic.TryGetValue("uiname", out var uiname);
+
+                            lookup.EntityReference.LogicalName = uitype;
+                            lookup.EntityReference.Name = uiname;
+                        }
+
+                        return val;
+                    })
                     .ToArray();
                 return value;
             }
@@ -104,6 +121,16 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                     var attrNode = TreeNodeHelper.AddChildNode(_node, "value");
                     var coll = new Dictionary<string, string>();
                     coll.Add("#text", valStr);
+
+                    if (val is Lookup lookup && lookup.EntityReference != null)
+                    {
+                        if (!String.IsNullOrEmpty(lookup.EntityReference.LogicalName))
+                            coll.Add("uitype", lookup.EntityReference.LogicalName);
+
+                        if (!String.IsNullOrEmpty(lookup.EntityReference.Name))
+                            coll.Add("uiname", lookup.EntityReference.Name);
+                    }
+
                     attrNode.Tag = coll;
                     TreeNodeHelper.SetNodeText(attrNode, _fxb);
                 }
@@ -291,6 +318,9 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
         [Browsable(false)]
         public string[] Targets { get; set; }
 
+        [Browsable(false)]
+        public IOrganizationService Service { get; set; }
+
         public override string ToString()
         {
             return EntityReference?.Id.ToString() ?? "<null>";
@@ -360,27 +390,36 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
         public override object EditValue(ITypeDescriptorContext context, IServiceProvider provider, object value)
         {
             var svc = (IWindowsFormsEditorService)provider.GetService(typeof(IWindowsFormsEditorService));
-            using (var form = new Form())
+
+            string[] targets = null;
+            IOrganizationService service = null;
+
+            if (context.PropertyDescriptor is ILookupPropertyDescriptor prop)
             {
-                string[] targets = null;
-
-                if (context.PropertyDescriptor is ILookupPropertyDescriptor prop)
-                    targets = prop.Targets;
-                else if (context.Instance is Lookup lookup)
-                    targets = lookup.Targets;
-
-                if (targets != null)
-                    form.Text = String.Join(", ", targets);
-
-                svc.ShowDialog(form);
+                targets = prop.Targets;
+                service = prop.Service;
+            }
+            else if (context.Instance is Lookup lookup)
+            {
+                targets = lookup.Targets;
+                service = lookup.Service;
             }
 
-            var entRef = new EntityReference("account", Guid.NewGuid());
+            if (targets == null || service == null)
+                return value;
 
-            if (context.PropertyDescriptor.PropertyType == typeof(EntityReference))
-                return entRef;
+            using (var form = new LookupSingle(targets, service))
+            {
+                if (svc.ShowDialog(form) == DialogResult.OK)
+                {
+                    if (context.PropertyDescriptor.PropertyType == typeof(EntityReference))
+                        return form.SelectedRecord;
 
-            return new Lookup { EntityReference = entRef };
+                    return new Lookup { EntityReference = form.SelectedRecord };
+                }
+            }
+
+            return value;
         }
     }
 
@@ -394,6 +433,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
         {
             var lookup = new Lookup();
             lookup.Targets = ((ILookupPropertyDescriptor)this.Context.PropertyDescriptor).Targets;
+            lookup.Service = ((ILookupPropertyDescriptor)this.Context.PropertyDescriptor).Service;
             return lookup;
         }
 
@@ -404,7 +444,10 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
             if (items != null)
             {
                 foreach (Lookup lookup in items)
+                {
                     lookup.Targets = ((ILookupPropertyDescriptor)this.Context.PropertyDescriptor).Targets;
+                    lookup.Service = ((ILookupPropertyDescriptor)this.Context.PropertyDescriptor).Service;
+                }
             }
 
             return items;

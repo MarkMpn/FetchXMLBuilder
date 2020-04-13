@@ -113,7 +113,11 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                     return Enum.Parse(targetType, str);
 
                 if (targetType == typeof(Lookup))
-                    return new Lookup { EntityReference = new EntityReference(null, Guid.Parse(str)) };
+                {
+                    _dictionary.TryGetValue("uitype", out var uitype);
+                    _dictionary.TryGetValue("uiname", out var uiname);
+                    return new Lookup { EntityReference = new EntityReference(uitype, Guid.Parse(str)) { Name = uiname } };
+                }
 
                 if (targetType == typeof(PicklistValue))
                     return new PicklistValue { OptionSetValue = new OptionSetValue(Int32.Parse(str)) };
@@ -142,14 +146,14 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 if (value is Lookup lookup)
                 {
                     if (!String.IsNullOrEmpty(lookup.EntityReference.LogicalName))
-                        _dictionary["uiType"] = lookup.EntityReference.LogicalName;
+                        _dictionary["uitype"] = lookup.EntityReference.LogicalName;
                     else
-                        _dictionary.Remove("uiType");
+                        _dictionary.Remove("uitype");
 
                     if (!String.IsNullOrEmpty(lookup.EntityReference.Name))
-                        _dictionary["uiDisplayName"] = lookup.EntityReference.Name;
+                        _dictionary["uiname"] = lookup.EntityReference.Name;
                     else
-                        _dictionary.Remove("uiDisplayName");
+                        _dictionary.Remove("uiname");
                 }
             }
 

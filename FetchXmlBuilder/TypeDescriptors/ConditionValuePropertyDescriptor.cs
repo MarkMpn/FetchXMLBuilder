@@ -40,10 +40,15 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 attrs.Add(new TypeConverterAttribute(typeof(ArrayValueConverter)));
 
                 if (attribute is LookupAttributeMetadata || attribute is UniqueIdentifierAttributeMetadata)
-                    attrs.Add(new EditorAttribute(typeof(LookupEditor), typeof(UITypeEditor)));
+                    attrs.Add(new EditorAttribute(typeof(LookupArrayEditor), typeof(UITypeEditor)));
+
+                if (attribute is EnumAttributeMetadata)
+                    attrs.Add(new EditorAttribute(typeof(OptionSetArrayEditor), typeof(UITypeEditor)));
             }
             else if (attribute is EnumAttributeMetadata)
+            {
                 attrs.Add(new TypeConverterAttribute(typeof(OptionSetValueConverter)));
+            }
             else if (attribute is LookupAttributeMetadata || attribute is UniqueIdentifierAttributeMetadata)
             {
                 attrs.Add(new EditorAttribute(typeof(LookupEditor), typeof(UITypeEditor)));
@@ -119,6 +124,14 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
 
             return base.ShouldSerializeValue(component);
         }
+
+        public override string GetValidationError(ITypeDescriptorContext context)
+        {
+            if (AttributeMetadata is EnumAttributeMetadata picklistAttr && GetValue(null) is PicklistValue picklist)
+                return picklistAttr.OptionSet.Options.Any(osv => osv.Value == picklist.OptionSetValue.Value) ? null : "Unknown picklist value";
+
+            return base.GetValidationError(context);
+        }
     }
 
     class OptionSetValueConverter : TypeConverter
@@ -135,7 +148,8 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
 
         public override StandardValuesCollection GetStandardValues(ITypeDescriptorContext context)
         {
-            var attribute = (EnumAttributeMetadata)((IAttributePropertyDescriptor)context.PropertyDescriptor).AttributeMetadata;
+            var picklist = context.Instance as PicklistValue;
+            var attribute = picklist?.Attribute ?? (EnumAttributeMetadata)((IAttributePropertyDescriptor)context.PropertyDescriptor).AttributeMetadata;
 
             return new StandardValuesCollection(attribute.OptionSet.Options.Select(option => option.Value).ToArray());
         }
@@ -152,35 +166,68 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
         {
             if (value is string str)
             {
-                if (Int32.TryParse(str, out var val))
-                    return val;
+                var picklist = context.Instance as PicklistValue;
+                var attribute = picklist?.Attribute ?? (EnumAttributeMetadata)((IAttributePropertyDescriptor)context.PropertyDescriptor).AttributeMetadata;
+                int val;
 
-                var regex = new Regex("\\[(\\d+)\\]$");
-                var match = regex.Match(str);
+                if (!Int32.TryParse(str, out val))
+                {
+                    var regex = new Regex("\\[(\\d+)\\]$");
+                    var match = regex.Match(str);
 
-                if (match.Success)
-                    return Int32.Parse(match.Groups[1].Value);
+                    if (match.Success)
+                    {
+                        val = Int32.Parse(match.Groups[1].Value);
+                    }
+                    else
+                    {
+                        var matchingOptions = attribute.OptionSet.Options.Where(option => option.Label.UserLocalizedLabel.Label == str).ToList();
 
-                var attribute = (EnumAttributeMetadata)((IAttributePropertyDescriptor)context.PropertyDescriptor).AttributeMetadata;
-                var matchingOptions = attribute.OptionSet.Options.Where(option => option.Label.UserLocalizedLabel.Label == str).ToList();
+                        if (matchingOptions.Count == 1)
+                            val = matchingOptions[0].Value.Value;
+                    }
+                }
 
-                if (matchingOptions.Count == 1)
-                    return matchingOptions[0].Value;
+                var osv = new OptionSetValue(val);
+
+                if (context.PropertyDescriptor.PropertyType == typeof(OptionSetValue))
+                    return osv;
+
+                return new PicklistValue { OptionSetValue = osv, Attribute = attribute };
             }
 
             return base.ConvertFrom(context, culture, value);
         }
 
+        public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType)
+        {
+            if (destinationType == typeof(string))
+                return true;
+
+            return base.CanConvertTo(context, destinationType);
+        }
+
         public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
         {
-            if (context != null && destinationType == typeof(string) && value is int i)
+            if (destinationType == typeof(string))
             {
-                var attribute = (EnumAttributeMetadata)((IAttributePropertyDescriptor)context.PropertyDescriptor).AttributeMetadata;
+                var picklist = value as PicklistValue ?? context?.Instance as PicklistValue;
+                var osv = value as OptionSetValue ?? picklist?.OptionSetValue;
 
-                var option = attribute.OptionSet.Options.SingleOrDefault(o => o.Value == i);
+                if (value is int i)
+                    osv = new OptionSetValue(i);
+
+                if (osv == null)
+                    return "<null>";
+
+                var attribute = picklist?.Attribute ?? (EnumAttributeMetadata)((IAttributePropertyDescriptor)context?.PropertyDescriptor)?.AttributeMetadata;
+
+                var option = attribute?.OptionSet.Options.SingleOrDefault(o => o.Value == osv.Value);
 
                 if (option != null)
                     return $"{option.Label.UserLocalizedLabel.Label} [{option.Value}]";
+
+                return osv.Value.ToString();
             }
 
             return base.ConvertTo(context, culture, value, destinationType);
@@ -250,6 +297,20 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
         }
     }
 
+    class PicklistValue
+    {
+        [TypeConverter(typeof(OptionSetValueConverter))]
+        public OptionSetValue OptionSetValue { get; set; }
+
+        [Browsable(false)]
+        public EnumAttributeMetadata Attribute { get; set; }
+
+        public override string ToString()
+        {
+            return (string) new OptionSetValueConverter().ConvertTo(this, typeof(string));
+        }
+    }
+
     class LookupConverter : TypeConverter
     {
         public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
@@ -258,14 +319,6 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 return true;
 
             return base.CanConvertFrom(context, sourceType);
-        }
-
-        public override bool IsValid(ITypeDescriptorContext context, object value)
-        {
-            if (value is string str)
-                return Guid.TryParse(str, out _);
-
-            return base.IsValid(context, value);
         }
 
         public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
@@ -333,7 +386,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
 
     class LookupArrayEditor : ArrayEditor
     {
-        public LookupArrayEditor() : base(typeof(Lookup))
+        public LookupArrayEditor() : base(typeof(Lookup[]))
         {
         }
 
@@ -344,12 +397,44 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
             return lookup;
         }
 
-        protected override object SetItems(object editValue, object[] value)
+        protected override object[] GetItems(object editValue)
         {
-            foreach (Lookup lookup in value)
-                lookup.Targets = ((ILookupPropertyDescriptor)this.Context.PropertyDescriptor).Targets;
+            var items = base.GetItems(editValue);
 
-            return base.SetItems(editValue, value);
+            if (items != null)
+            {
+                foreach (Lookup lookup in items)
+                    lookup.Targets = ((ILookupPropertyDescriptor)this.Context.PropertyDescriptor).Targets;
+            }
+
+            return items;
+        }
+    }
+
+    class OptionSetArrayEditor : ArrayEditor
+    {
+        public OptionSetArrayEditor() : base(typeof(PicklistValue[]))
+        {
+        }
+
+        protected override object CreateInstance(Type itemType)
+        {
+            var picklist = new PicklistValue();
+            picklist.Attribute = (EnumAttributeMetadata)((IAttributePropertyDescriptor)this.Context.PropertyDescriptor).AttributeMetadata;
+            return picklist;
+        }
+
+        protected override object[] GetItems(object editValue)
+        {
+            var items = base.GetItems(editValue);
+
+            if (items != null)
+            {
+                foreach (PicklistValue picklist in items)
+                    picklist.Attribute = (EnumAttributeMetadata)((IAttributePropertyDescriptor)this.Context.PropertyDescriptor).AttributeMetadata;
+            }
+
+            return items;
         }
     }
 }

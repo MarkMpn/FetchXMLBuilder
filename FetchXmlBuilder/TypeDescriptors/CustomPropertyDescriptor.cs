@@ -99,7 +99,10 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                     return dt.ToString("yyyy-MM-dd HH:mm:ss");
 
                 if (value is Lookup lookup)
-                    value = lookup.EntityReference.Id;
+                    value = lookup?.EntityReference.Id;
+
+                if (value is PicklistValue picklist)
+                    value = picklist?.OptionSetValue.Value;
 
                 return value.ToString();
             }
@@ -111,6 +114,9 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
 
                 if (targetType == typeof(Lookup))
                     return new Lookup { EntityReference = new EntityReference(null, Guid.Parse(str)) };
+
+                if (targetType == typeof(PicklistValue))
+                    return new PicklistValue { OptionSetValue = new OptionSetValue(Int32.Parse(str)) };
             }
 
             return Convert.ChangeType(value, targetType);

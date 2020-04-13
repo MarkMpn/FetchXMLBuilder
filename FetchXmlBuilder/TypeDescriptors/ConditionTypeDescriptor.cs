@@ -36,9 +36,9 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 [AttributeTypeCode.Memo] = typeof(string),
                 [AttributeTypeCode.Money] = typeof(decimal),
                 [AttributeTypeCode.Owner] = typeof(Lookup),
-                [AttributeTypeCode.Picklist] = typeof(int),
-                [AttributeTypeCode.State] = typeof(int),
-                [AttributeTypeCode.Status] = typeof(int),
+                [AttributeTypeCode.Picklist] = typeof(PicklistValue),
+                [AttributeTypeCode.State] = typeof(PicklistValue),
+                [AttributeTypeCode.Status] = typeof(PicklistValue),
                 [AttributeTypeCode.String] = typeof(string),
                 [AttributeTypeCode.Uniqueidentifier] = typeof(Lookup)
             };

@@ -355,6 +355,7 @@
     <Compile Include="TypeDescriptors\BasicSite.cs" />
     <Compile Include="TypeDescriptors\ConditionTypeDescriptor.cs" />
     <Compile Include="TypeDescriptors\CustomPropertyDescriptor.cs" />
+    <Compile Include="TypeDescriptors\FilterTypeDescriptor.cs" />
     <Compile Include="TypeDescriptors\IAttributePropertyDescriptor.cs" />
     <Compile Include="TypeDescriptors\ILookupPropertyDescriptor.cs" />
     <Compile Include="TypeDescriptors\ITypeConvertingPropertyDescriptor.cs" />

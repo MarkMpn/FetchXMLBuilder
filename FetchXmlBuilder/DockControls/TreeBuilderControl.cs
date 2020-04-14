@@ -568,6 +568,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.DockControls
 
                         case "filter":
                             ctrl = new filterControl(collec, this);
+                            descriptor = new FilterTypeDescriptor(node, fxb, this);
                             break;
 
                         case "condition":

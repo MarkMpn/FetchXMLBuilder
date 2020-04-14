@@ -497,6 +497,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.DockControls
                     {
                         case "fetch":
                             ctrl = new fetchControl(collec, this);
+                            descriptor = new FetchTypeDescriptor(node, fxb, this);
                             break;
 
                         case "entity":

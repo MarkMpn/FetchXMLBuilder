@@ -17,8 +17,8 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
         private string _key;
         private TreeBuilderControl _tree;
 
-        public CustomPropertyDescriptor(string name, string category, string description, Attribute[] attrs, object owner, T defaultValue, Dictionary<string,string> dictionary, string key, TreeBuilderControl tree) : 
-            base(name, CreateAttributes(attrs, category, description))
+        public CustomPropertyDescriptor(string name, string category, int categoryOrder, int categoryCount, string description, Attribute[] attrs, object owner, T defaultValue, Dictionary<string,string> dictionary, string key, TreeBuilderControl tree) : 
+            base(name, CreateAttributes(attrs, category, categoryOrder, categoryCount, description))
         {
             _owner = owner;
             _defaultValue = defaultValue;
@@ -27,12 +27,12 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
             _tree = tree;
         }
 
-        static Attribute[] CreateAttributes(Attribute[] attributes, string category, string description)
+        static Attribute[] CreateAttributes(Attribute[] attributes, string category, int categoryOrder, int categoryCount, string description)
         {
             var attrs = new List<Attribute>(attributes);
 
             if (!String.IsNullOrEmpty(category))
-                attrs.Add(new CategoryAttribute(category));
+                attrs.Add(new CustomSortedCategoryAttribute(category, (ushort) categoryOrder, (ushort) categoryCount));
 
             if (!String.IsNullOrEmpty(description))
                 attrs.Add(new DescriptionAttribute(description));

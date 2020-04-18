@@ -349,18 +349,21 @@
     <Compile Include="AppCode\SQLQueryGenerator.cs" />
     <Compile Include="TypeDescriptors\ConditionValuePropertyDescriptor.cs" />
     <Compile Include="TypeDescriptors\ConditionOperatorPropertyDescriptor.cs" />
+    <Compile Include="TypeDescriptors\CustomSortedCategoryAttribute.cs" />
     <Compile Include="TypeDescriptors\EntityPropertyDescriptor.cs" />
     <Compile Include="TypeDescriptors\AttributePropertyDescriptor.cs" />
     <Compile Include="TypeDescriptors\AttributeTypeDescriptor.cs" />
     <Compile Include="TypeDescriptors\BasicSite.cs" />
     <Compile Include="TypeDescriptors\ConditionTypeDescriptor.cs" />
     <Compile Include="TypeDescriptors\CustomPropertyDescriptor.cs" />
+    <Compile Include="TypeDescriptors\EntityTypeDescriptor.cs" />
     <Compile Include="TypeDescriptors\FetchTypeDescriptor.cs" />
     <Compile Include="TypeDescriptors\FilterTypeDescriptor.cs" />
     <Compile Include="TypeDescriptors\IAttributePropertyDescriptor.cs" />
     <Compile Include="TypeDescriptors\ILookupPropertyDescriptor.cs" />
     <Compile Include="TypeDescriptors\ITypeConvertingPropertyDescriptor.cs" />
     <Compile Include="TypeDescriptors\IValidatingPropertyDescriptor.cs" />
+    <Compile Include="TypeDescriptors\LinkEntityTypeDescriptor.cs" />
     <Compile Include="TypeDescriptors\PropertyValueUIService.cs" />
   </ItemGroup>
   <ItemGroup>

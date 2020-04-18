@@ -29,6 +29,8 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
             var topProp = new CustomPropertyDescriptor<int?>(
                 "Top",
                 "Fetch",
+                1,
+                2,
                 "The maximum number of records to retrieve",
                 Array.Empty<Attribute>(),
                 this,
@@ -40,6 +42,8 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
             var distinctProp = new CustomPropertyDescriptor<bool>(
                 "Distinct",
                 "Fetch",
+                1,
+                2,
                 "Indicates if only rows with unique values are to be included in the result set",
                 Array.Empty<Attribute>(),
                 this,
@@ -51,6 +55,8 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
             var noLockProp = new CustomPropertyDescriptor<bool>(
                 "No Lock",
                 "Fetch",
+                1,
+                2,
                 "Indicates if the query is to be run without taking any locks on the database",
                 Array.Empty<Attribute>(),
                 this,
@@ -62,6 +68,8 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
             var aggregateProp = new CustomPropertyDescriptor<bool>(
                 "Aggregate",
                 "Fetch",
+                1,
+                2,
                 "Indicates if the query includes aggregations",
                 Array.Empty<Attribute>(),
                 this,
@@ -73,6 +81,8 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
             var totalRecordCountProp = new CustomPropertyDescriptor<bool>(
                 "Total Record Count",
                 "Fetch",
+                1,
+                2,
                 "Indicates if the results should include the total number of records available",
                 Array.Empty<Attribute>(),
                 this,
@@ -84,6 +94,8 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
             var pageSizeProp = new CustomPropertyDescriptor<int>(
                 "Page Size",
                 "Paging",
+                2,
+                2,
                 "The number of records to retrieve for each page",
                 Array.Empty<Attribute>(),
                 this,
@@ -95,6 +107,8 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
             var pageNumberProp = new CustomPropertyDescriptor<int>(
                 "Page Number",
                 "Paging",
+                2,
+                2,
                 "The number of the page to retrieve (first page is 1)",
                 Array.Empty<Attribute>(),
                 this,
@@ -106,6 +120,8 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
             var pagingCookieProp = new CustomPropertyDescriptor<string>(
                 "Paging Cookie",
                 "Paging",
+                2,
+                2,
                 "The paging cookie returned from the previous RetrieveMultiple request",
                 Array.Empty<Attribute>(),
                 this,

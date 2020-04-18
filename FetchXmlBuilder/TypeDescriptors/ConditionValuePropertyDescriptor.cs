@@ -24,8 +24,8 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
         private TreeNode _node;
         private FetchXmlBuilder _fxb;
 
-        public ConditionValuePropertyDescriptor(string name, string category, string description, Attribute[] attrs, object owner, T defaultValue, Dictionary<string,string> dictionary, string key, TreeBuilderControl tree, AttributeMetadata attribute, TreeNode node, FetchXmlBuilder fxb) :
-            base(name, category, description, CreateAttributes(attrs, attribute), owner, defaultValue, dictionary, key, tree)
+        public ConditionValuePropertyDescriptor(string name, string category, int categoryOrder, int categoryCount, string description, Attribute[] attrs, object owner, T defaultValue, Dictionary<string,string> dictionary, string key, TreeBuilderControl tree, AttributeMetadata attribute, TreeNode node, FetchXmlBuilder fxb) :
+            base(name, category, categoryOrder, categoryCount, description, CreateAttributes(attrs, attribute), owner, defaultValue, dictionary, key, tree)
         {
             AttributeMetadata = attribute;
             _node = node;

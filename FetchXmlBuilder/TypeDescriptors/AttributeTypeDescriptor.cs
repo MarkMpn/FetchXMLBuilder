@@ -32,7 +32,9 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
             
             var nameProp = new AttributePropertyDescriptor(
                 "(Name)",
-                "(Attribute)",
+                "Attribute",
+                1,
+                3,
                 "The logical name of the attribute to select",
                 new Attribute[]
                 {
@@ -50,7 +52,9 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
 
             var aliasProp = new CustomPropertyDescriptor<string>(
                 "Alias",
-                "(Attribute)",
+                "Attribute",
+                1,
+                3,
                 "A different name to use for the attribute in the result set",
                 Array.Empty<Attribute>(),
                 this,
@@ -62,6 +66,8 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
             var groupByProp = new CustomPropertyDescriptor<bool>(
                 "Group By",
                 "Aggregate",
+                2,
+                3,
                 "Indicates if the results should be grouped by the value of this attribute",
                 new Attribute[]
                 {
@@ -78,6 +84,8 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
             var aggregateProp = new CustomPropertyDescriptor<AggregateType?>(
                 "Aggregate",
                 "Aggregate",
+                2,
+                3,
                 "The aggregate function to apply to this attribute",
                 new Attribute[]
                 {
@@ -94,6 +102,8 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
             var distinctProp = new CustomPropertyDescriptor<bool>(
                 "Distinct",
                 "Aggregate",
+                2,
+                3,
                 "Indicates if only distinct values in this attribute should be used when calculating the aggregate",
                 new Attribute[]
                 {
@@ -109,6 +119,8 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 (
                 "User Time Zone",
                 "Time Zone",
+                3,
+                3,
                 "Indicates if the date/time values in this attribute should be retrieved in the user's time zone rather than UTC",
                 new Attribute[]
                 {
@@ -123,6 +135,8 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
             var dateGroupingProp = new CustomPropertyDescriptor<DateGroupingType?>(
                 "Date Grouping",
                 "Aggregate",
+                2,
+                3,
                 "Indicates the granularity of the date grouping",
                 new Attribute[]
                 {

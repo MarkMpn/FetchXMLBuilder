@@ -67,6 +67,8 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
             var entityProp = new EntityPropertyDescriptor(
                 "Entity",
                 "Condition",
+                1,
+                1,
                 "The name or alias of the entity to apply the condition to",
                 new Attribute[]
                 {
@@ -78,7 +80,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 dictionary,
                 "entity",
                 _tree,
-                entities.ToArray());
+                entities.Select(e => e?.ToString()).ToArray());
 
             var entity = (string)entityProp.GetValue(this);
             var entityNode = entities.FirstOrDefault(e => e != null && e.ToString() == entity);
@@ -95,6 +97,8 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
             var attributeProp = new AttributePropertyDescriptor(
                 "Attribute",
                 "Condition",
+                1,
+                1,
                 "The logical name of the attribute to apply the condition to",
                 new Attribute[]
                 {
@@ -113,6 +117,8 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
             var operatorProp = new ConditionOperatorPropertyDescriptor(
                 "Operator",
                 "Condition",
+                1,
+                1,
                 "The comparison operator to apply",
                 new Attribute[]
                 {
@@ -148,6 +154,8 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                     valueProp = (PropertyDescriptor)Activator.CreateInstance(propertyDescriptorType,
                         "Value",
                         "Condition",
+                        1,
+                        1,
                         "The value to compare the attribute to",
                         Array.Empty<Attribute>(),
                         this,

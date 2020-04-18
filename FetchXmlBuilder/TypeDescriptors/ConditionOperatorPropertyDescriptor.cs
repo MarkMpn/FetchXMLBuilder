@@ -14,8 +14,8 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
 {
     class ConditionOperatorPropertyDescriptor : CustomPropertyDescriptor<ConditionOperator>
     {
-        public ConditionOperatorPropertyDescriptor(string name, string category, string description, Attribute[] attrs, object owner, ConditionOperator defaultValue, Dictionary<string,string> dictionary, string key, TreeBuilderControl tree, AttributeMetadata attribute) :
-            base(name, category, description, CreateAttributes(attrs), owner, defaultValue, dictionary, key, tree)
+        public ConditionOperatorPropertyDescriptor(string name, string category, int categoryOrder, int categoryCount, string description, Attribute[] attrs, object owner, ConditionOperator defaultValue, Dictionary<string,string> dictionary, string key, TreeBuilderControl tree, AttributeMetadata attribute) :
+            base(name, category, categoryOrder, categoryCount, description, CreateAttributes(attrs), owner, defaultValue, dictionary, key, tree)
         {
             AttributeMetadata = attribute;
         }

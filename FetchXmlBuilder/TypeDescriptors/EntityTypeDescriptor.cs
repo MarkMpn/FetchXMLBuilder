@@ -5,17 +5,18 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Cinteros.Xrm.FetchXmlBuilder.AppCode;
 using Cinteros.Xrm.FetchXmlBuilder.DockControls;
 
 namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
 {
-    class FilterTypeDescriptor : CustomTypeDescriptor
+    class EntityTypeDescriptor : CustomTypeDescriptor
     {
         private TreeNode _node;
         private FetchXmlBuilder _fxb;
         private TreeBuilderControl _tree;
-        
-        public FilterTypeDescriptor(TreeNode node, FetchXmlBuilder fxb, TreeBuilderControl tree)
+
+        public EntityTypeDescriptor(TreeNode node, FetchXmlBuilder fxb, TreeBuilderControl tree)
         {
             _node = node;
             _fxb = fxb;
@@ -26,20 +27,22 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
         {
             var dictionary = (Dictionary<string, string>)_node.Tag;
 
-            var filterTypeProp = new CustomPropertyDescriptor<filterType>(
-                "Type",
-                "Filter",
+            var entities = _fxb.GetDisplayEntities();
+            var nameProp = new EntityPropertyDescriptor(
+                "Name", 
+                "Entity",
                 1,
                 1,
-                "Indicates how conditions in this filter should be combined",
-                Array.Empty<Attribute>(),
-                this,
-                filterType.and,
-                dictionary,
-                "type",
-                _tree);
+                "The logical name of the entity to query", 
+                Array.Empty<Attribute>(), 
+                this, 
+                null, 
+                dictionary, 
+                "name", 
+                _tree, 
+                entities.Keys.ToArray());
 
-            return new PropertyDescriptorCollection(new[] { filterTypeProp });
+            return new PropertyDescriptorCollection(new[] { nameProp });
         }
 
         public override PropertyDescriptorCollection GetProperties(Attribute[] attributes)

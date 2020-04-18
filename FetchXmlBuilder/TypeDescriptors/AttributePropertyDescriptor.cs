@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing.Design;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,8 +13,8 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
 {
     class AttributePropertyDescriptor : CustomPropertyDescriptor<string>
     {
-        public AttributePropertyDescriptor(string name, string category, string description, Attribute[] attrs, object owner, string defaultValue, Dictionary<string,string> dictionary, string key, TreeBuilderControl tree, AttributeMetadata[] attributes) :
-            base(name, category, description, CreateAttributes(attrs), owner, defaultValue, dictionary, key, tree)
+        public AttributePropertyDescriptor(string name, string category, int categoryOrder, int categoryCount, string description, Attribute[] attrs, object owner, string defaultValue, Dictionary<string,string> dictionary, string key, TreeBuilderControl tree, AttributeMetadata[] attributes) :
+            base(name, category, categoryOrder, categoryCount, description, CreateAttributes(attrs), owner, defaultValue, dictionary, key, tree)
         {
             AttributeMetadata = attributes;
         }
@@ -52,6 +53,22 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 var descriptor = (AttributePropertyDescriptor)context.PropertyDescriptor;
 
                 return new StandardValuesCollection(descriptor.AttributeMetadata.OrderBy(a => a.LogicalName).Select(a => a.LogicalName).ToArray());
+            }
+
+            public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
+            {
+                if (sourceType == typeof(string))
+                    return true;
+
+                return base.CanConvertFrom(context, sourceType);
+            }
+
+            public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
+            {
+                if (value is string)
+                    return value;
+
+                return base.ConvertFrom(context, culture, value);
             }
         }
     }

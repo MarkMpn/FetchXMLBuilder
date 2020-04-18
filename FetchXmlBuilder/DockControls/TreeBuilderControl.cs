@@ -502,6 +502,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.DockControls
 
                         case "entity":
                             ctrl = new entityControl(collec, fxb, this);
+                            descriptor = new EntityTypeDescriptor(node, fxb, this);
                             break;
 
                         case "link-entity":
@@ -533,6 +534,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.DockControls
                                 break;
                             }
                             ctrl = new linkEntityControl(node, fxb, this);
+                            descriptor = new LinkEntityTypeDescriptor(node, fxb, this);
                             break;
 
                         case "attribute":

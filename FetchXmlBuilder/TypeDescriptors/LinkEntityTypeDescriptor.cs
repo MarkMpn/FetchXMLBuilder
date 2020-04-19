@@ -24,6 +24,10 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
             _tree = tree;
         }
 
+        public TreeNode Node { get => _node; }
+
+        public FetchXmlBuilder FXB { get => _fxb; }
+
         public override PropertyDescriptorCollection GetProperties()
         {
             var dictionary = (Dictionary<string, string>)_node.Tag;
@@ -35,7 +39,10 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 1,
                 3,
                 "The logical name of the entity to query",
-                Array.Empty<Attribute>(),
+                new Attribute[]
+                {
+                    new RefreshPropertiesAttribute(RefreshProperties.All)
+                },
                 this,
                 null,
                 dictionary,
@@ -124,9 +131,20 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 "visible",
                 _tree);
 
-            // TODO: Show relationships
+            var relationshipProp = new RelationshipPropertyDescriptor(
+                "Relationship",
+                "Join",
+                2,
+                3,
+                "The relationship to use as a template for this join",
+                new Attribute[]
+                {
+                    new RefreshPropertiesAttribute(RefreshProperties.All)
+                },
+                this,
+                _tree);
 
-            return new PropertyDescriptorCollection(new PropertyDescriptor[] { nameProp, aliasProp, fromProp, toProp, typeProp, intersectProp, visibleProp });
+            return new PropertyDescriptorCollection(new PropertyDescriptor[] { nameProp, aliasProp, fromProp, toProp, typeProp, intersectProp, visibleProp, relationshipProp });
         }
 
         public override PropertyDescriptorCollection GetProperties(Attribute[] attributes)

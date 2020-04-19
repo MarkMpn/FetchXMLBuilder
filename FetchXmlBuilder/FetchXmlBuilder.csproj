@@ -365,6 +365,7 @@
     <Compile Include="TypeDescriptors\IValidatingPropertyDescriptor.cs" />
     <Compile Include="TypeDescriptors\LinkEntityTypeDescriptor.cs" />
     <Compile Include="TypeDescriptors\PropertyValueUIService.cs" />
+    <Compile Include="TypeDescriptors\RelationshipPropertyDescriptor.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Controls\commentControl.resx">

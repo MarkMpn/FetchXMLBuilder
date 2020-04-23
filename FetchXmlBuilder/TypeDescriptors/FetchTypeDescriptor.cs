@@ -88,7 +88,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 this,
                 false,
                 dictionary,
-                "aggregate",
+                "returntotalrecordcount",
                 _tree);
 
             var pageSizeProp = new CustomPropertyDescriptor<int>(

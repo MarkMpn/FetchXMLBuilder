@@ -363,6 +363,7 @@
     <Compile Include="TypeDescriptors\ILookupPropertyDescriptor.cs" />
     <Compile Include="TypeDescriptors\ITypeConvertingPropertyDescriptor.cs" />
     <Compile Include="TypeDescriptors\IValidatingPropertyDescriptor.cs" />
+    <Compile Include="TypeDescriptors\OrderTypeDescriptor.cs" />
     <Compile Include="TypeDescriptors\LinkEntityTypeDescriptor.cs" />
     <Compile Include="TypeDescriptors\PropertyValueUIService.cs" />
     <Compile Include="TypeDescriptors\RelationshipPropertyDescriptor.cs" />

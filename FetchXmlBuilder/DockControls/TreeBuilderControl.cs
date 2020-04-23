@@ -563,6 +563,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.DockControls
                                         else if (node.Name == "order")
                                         {
                                             ctrl = new orderControl(node, attributes, fxb, this);
+                                            descriptor = new OrderTypeDescriptor(node, fxb, this, attributes);
                                         }
                                         break;
                                 }

@@ -1,34 +1,32 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Drawing.Design;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using Cinteros.Xrm.FetchXmlBuilder.DockControls;
+using Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors.PropertyDescriptors;
 using Microsoft.Xrm.Sdk.Metadata;
 
 namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
 {
-    class AttributeTypeDescriptor : CustomTypeDescriptor
+    /// <summary>
+    /// Provides a type descriptor for the &lt;attribute&gt; element
+    /// </summary>
+    class AttributeTypeDescriptor : BaseTypeDescriptor
     {
-        private TreeNode _node;
-        private AttributeMetadata[] _attributes;
-        private TreeBuilderControl _tree;
+        private readonly AttributeMetadata[] _attributes;
 
-        public AttributeTypeDescriptor(TreeNode node, AttributeMetadata[] attributes, TreeBuilderControl tree)
+        public AttributeTypeDescriptor(TreeNode node, FetchXmlBuilder fxb, TreeBuilderControl tree, AttributeMetadata[] attributes)
+            : base(node, fxb, tree)
         {
-            _node = node;
             _attributes = attributes;
-            _tree = tree;
         }
 
         public override PropertyDescriptorCollection GetProperties()
         {
-            var aggregate = _tree.GetFetchType().aggregateSpecified && _tree.GetFetchType().aggregate;
+            var aggregate = Tree.GetFetchType().aggregateSpecified && Tree.GetFetchType().aggregate;
 
-            var dictionary = (Dictionary<string, string>)_node.Tag;
+            var dictionary = (Dictionary<string, string>)Node.Tag;
             
             var nameProp = new AttributePropertyDescriptor(
                 "(Name)",
@@ -44,7 +42,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 String.Empty,
                 dictionary,
                 "name",
-                _tree,
+                Tree,
                 _attributes);
 
             var attributeName = (string) nameProp.GetValue(this);
@@ -61,7 +59,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 String.Empty,
                 dictionary,
                 "alias",
-                _tree);
+                Tree);
 
             var groupByProp = new CustomPropertyDescriptor<bool>(
                 "Group By",
@@ -77,7 +75,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 false,
                 dictionary,
                 "groupby",
-                _tree);
+                Tree);
 
             var groupBy = (bool?)groupByProp.GetValue(this);
 
@@ -95,7 +93,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 null,
                 dictionary,
                 "aggregate",
-                _tree);
+                Tree);
 
             var aggregateType = (AggregateType?)aggregateProp.GetValue(this);
 
@@ -113,7 +111,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 false,
                 dictionary,
                 "distinct",
-                _tree);
+                Tree);
 
             var userTimeZoneProp = new CustomPropertyDescriptor<bool>
                 (
@@ -130,7 +128,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 false,
                 dictionary,
                 "usertimezone",
-                _tree);
+                Tree);
 
             var dateGroupingProp = new CustomPropertyDescriptor<DateGroupingType?>(
                 "Date Grouping",
@@ -146,19 +144,9 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 null,
                 dictionary,
                 "dategrouping",
-                _tree);
+                Tree);
 
             return new PropertyDescriptorCollection(new PropertyDescriptor[] { nameProp, aliasProp, aggregateProp, groupByProp, distinctProp, userTimeZoneProp, dateGroupingProp });
-        }
-
-        public override PropertyDescriptorCollection GetProperties(Attribute[] attributes)
-        {
-            return GetProperties();
-        }
-
-        public override object GetPropertyOwner(PropertyDescriptor pd)
-        {
-            return this;
         }
     }
 }

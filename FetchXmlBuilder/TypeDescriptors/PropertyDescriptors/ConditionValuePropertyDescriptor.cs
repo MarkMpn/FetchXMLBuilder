@@ -5,9 +5,7 @@ using System.ComponentModel.Design;
 using System.Drawing.Design;
 using System.Globalization;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Forms.Design;
 using Cinteros.Xrm.FetchXmlBuilder.AppCode;
@@ -15,14 +13,17 @@ using Cinteros.Xrm.FetchXmlBuilder.DockControls;
 using Cinteros.Xrm.FetchXmlBuilder.Forms;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Metadata;
-using Microsoft.Xrm.Sdk.Query;
 
-namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
+namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors.PropertyDescriptors
 {
+    /// <summary>
+    /// A property descriptor to allow editing of condition values of various different types
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     class ConditionValuePropertyDescriptor<T> : CustomPropertyDescriptor<T>, IAttributePropertyDescriptor, ILookupPropertyDescriptor
     {
-        private TreeNode _node;
-        private FetchXmlBuilder _fxb;
+        private readonly TreeNode _node;
+        private readonly FetchXmlBuilder _fxb;
 
         public ConditionValuePropertyDescriptor(string name, string category, int categoryOrder, int categoryCount, string description, Attribute[] attrs, object owner, T defaultValue, Dictionary<string,string> dictionary, string key, TreeBuilderControl tree, AttributeMetadata attribute, TreeNode node, FetchXmlBuilder fxb) :
             base(name, category, categoryOrder, categoryCount, description, CreateAttributes(attrs, attribute), owner, defaultValue, dictionary, key, tree)
@@ -36,15 +37,20 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
         {
             var attrs = new List<Attribute>(attributes);
 
+            // Apply the appropriate type converter & editor for the type of values being edited
             if (typeof(T).IsArray)
             {
                 attrs.Add(new TypeConverterAttribute(typeof(ArrayValueConverter)));
 
                 if (attribute is LookupAttributeMetadata || attribute is UniqueIdentifierAttributeMetadata)
+                {
                     attrs.Add(new EditorAttribute(typeof(LookupArrayEditor), typeof(UITypeEditor)));
+                }
 
                 if (attribute is EnumAttributeMetadata)
+                {
                     attrs.Add(new EditorAttribute(typeof(OptionSetArrayEditor), typeof(UITypeEditor)));
+                }
             }
             else if (attribute is EnumAttributeMetadata)
             {
@@ -66,10 +72,14 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
             get
             {
                 if (AttributeMetadata is LookupAttributeMetadata lookup)
+                {
                     return lookup.Targets;
+                }
 
                 if (AttributeMetadata is UniqueIdentifierAttributeMetadata guid)
+                {
                     return new[] { guid.EntityLogicalName };
+                }
 
                 return Array.Empty<string>();
             }
@@ -125,10 +135,14 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                     if (val is Lookup lookup && lookup.EntityReference != null)
                     {
                         if (!String.IsNullOrEmpty(lookup.EntityReference.LogicalName))
+                        {
                             coll.Add("uitype", lookup.EntityReference.LogicalName);
+                        }
 
                         if (!String.IsNullOrEmpty(lookup.EntityReference.Name))
+                        {
                             coll.Add("uiname", lookup.EntityReference.Name);
+                        }
                     }
 
                     attrNode.Tag = coll;
@@ -147,7 +161,9 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
         public override bool ShouldSerializeValue(object component)
         {
             if (typeof(T).IsArray)
+            {
                 return true;
+            }
 
             return base.ShouldSerializeValue(component);
         }
@@ -155,7 +171,9 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
         public override string GetValidationError(ITypeDescriptorContext context)
         {
             if (AttributeMetadata is EnumAttributeMetadata picklistAttr && GetValue(null) is PicklistValue picklist)
+            {
                 return picklistAttr.OptionSet.Options.Any(osv => osv.Value == picklist.OptionSetValue.Value) ? null : "Unknown picklist value";
+            }
 
             return base.GetValidationError(context);
         }
@@ -184,7 +202,9 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
         public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
         {
             if (sourceType == typeof(string))
+            {
                 return true;
+            }
 
             return base.CanConvertFrom(context, sourceType);
         }
@@ -211,14 +231,18 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                         var matchingOptions = attribute.OptionSet.Options.Where(option => option.Label.UserLocalizedLabel.Label == str).ToList();
 
                         if (matchingOptions.Count == 1)
+                        {
                             val = matchingOptions[0].Value.Value;
+                        }
                     }
                 }
 
                 var osv = new OptionSetValue(val);
 
                 if (context.PropertyDescriptor.PropertyType == typeof(OptionSetValue))
+                {
                     return osv;
+                }
 
                 return new PicklistValue { OptionSetValue = osv, Attribute = attribute };
             }
@@ -229,7 +253,9 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
         public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType)
         {
             if (destinationType == typeof(string))
+            {
                 return true;
+            }
 
             return base.CanConvertTo(context, destinationType);
         }
@@ -242,17 +268,23 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 var osv = value as OptionSetValue ?? picklist?.OptionSetValue;
 
                 if (value is int i)
+                {
                     osv = new OptionSetValue(i);
+                }
 
                 if (osv == null)
+                {
                     return "<null>";
+                }
 
                 var attribute = picklist?.Attribute ?? (EnumAttributeMetadata)((IAttributePropertyDescriptor)context?.PropertyDescriptor)?.AttributeMetadata;
 
                 var option = attribute?.OptionSet.Options.SingleOrDefault(o => o.Value == osv.Value);
 
                 if (option != null)
+                {
                     return $"{option.Label.UserLocalizedLabel.Label} [{option.Value}]";
+                }
 
                 return osv.Value.ToString();
             }
@@ -265,7 +297,6 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
     {
         public ArrayValueConverter()
         {
-
         }
 
         public override object CreateInstance(ITypeDescriptorContext context, System.Collections.IDictionary propertyValues)
@@ -276,7 +307,9 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
         public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
         {
             if (sourceType == typeof(string))
+            {
                 return true;
+            }
 
             return base.CanConvertFrom(context, sourceType);
         }
@@ -284,7 +317,9 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
         public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType)
         {
             if (destinationType == typeof(string))
+            {
                 return true;
+            }
 
             return base.CanConvertTo(context, destinationType);
         }
@@ -292,10 +327,12 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
         public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
         {
             if (value is string)
+            {
                 return ((string)value).Split(',')
                     .Select(str => str.Trim())
                     .Select(val => ((ITypeConvertingPropertyDescriptor)context.PropertyDescriptor).ConvertValue(context.PropertyDescriptor.PropertyType.GetElementType(), val))
                     .ToArray();
+            }
 
             return base.ConvertFrom(context, culture, value);
         }
@@ -303,7 +340,9 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
         public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
         {
             if (destinationType == typeof(string))
+            {
                 return String.Join(", ", ((System.Collections.IEnumerable)value).Cast<object>());
+            }
 
             return base.ConvertTo(context, culture, value, destinationType);
         }
@@ -346,7 +385,9 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
         public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
         {
             if (sourceType == typeof(string))
+            {
                 return true;
+            }
 
             return base.CanConvertFrom(context, sourceType);
         }
@@ -358,7 +399,9 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 var entRef = new EntityReference("account", Guid.Parse(str));
 
                 if (context.PropertyDescriptor.PropertyType == typeof(EntityReference))
+                {
                     return entRef;
+                }
 
                 return new Lookup { EntityReference = entRef };
             }
@@ -371,7 +414,9 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
             if (destinationType == typeof(string))
             {
                 if (!(value is EntityReference entRef))
+                {
                     entRef = ((Lookup)value).EntityReference;
+                }
 
                 return entRef.Id.ToString();
             }
@@ -406,14 +451,18 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
             }
 
             if (targets == null || service == null)
+            {
                 return value;
+            }
 
             using (var form = new LookupSingle(targets, service))
             {
                 if (svc.ShowDialog(form) == DialogResult.OK)
                 {
                     if (context.PropertyDescriptor.PropertyType == typeof(EntityReference))
+                    {
                         return form.SelectedRecord;
+                    }
 
                     return new Lookup { EntityReference = form.SelectedRecord };
                 }
@@ -474,7 +523,9 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
             if (items != null)
             {
                 foreach (PicklistValue picklist in items)
+                {
                     picklist.Attribute = (EnumAttributeMetadata)((IAttributePropertyDescriptor)this.Context.PropertyDescriptor).AttributeMetadata;
+                }
             }
 
             return items;

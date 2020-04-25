@@ -2,63 +2,56 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using Cinteros.Xrm.FetchXmlBuilder.AppCode;
 using Cinteros.Xrm.FetchXmlBuilder.Controls;
 using Cinteros.Xrm.FetchXmlBuilder.DockControls;
-using Microsoft.Xrm.Sdk;
+using Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors.PropertyDescriptors;
 using Microsoft.Xrm.Sdk.Metadata;
 using Microsoft.Xrm.Sdk.Query;
 
 namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
 {
-    class ConditionTypeDescriptor : CustomTypeDescriptor
+    /// <summary>
+    /// Provides a type descriptor for the &lt;condition&gt; and &lt;value&gt; elements
+    /// </summary>
+    class ConditionTypeDescriptor : BaseTypeDescriptor
     {
-        private TreeNode _node;
-        private FetchXmlBuilder _fxb;
-        private TreeBuilderControl _tree;
-        private static IDictionary<AttributeTypeCode, Type> _attributeTypes;
-
-        static ConditionTypeDescriptor()
+        private static readonly IDictionary<AttributeTypeCode, Type> _attributeTypes = new Dictionary<AttributeTypeCode, Type>
         {
-            _attributeTypes = new Dictionary<AttributeTypeCode, Type>
-            {
-                [AttributeTypeCode.BigInt] = typeof(long),
-                [AttributeTypeCode.Boolean] = typeof(bool),
-                [AttributeTypeCode.Customer] = typeof(Lookup),
-                [AttributeTypeCode.DateTime] = typeof(DateTime),
-                [AttributeTypeCode.Decimal] = typeof(decimal),
-                [AttributeTypeCode.Double] = typeof(double),
-                [AttributeTypeCode.Integer] = typeof(int),
-                [AttributeTypeCode.Lookup] = typeof(Lookup),
-                [AttributeTypeCode.Memo] = typeof(string),
-                [AttributeTypeCode.Money] = typeof(decimal),
-                [AttributeTypeCode.Owner] = typeof(Lookup),
-                [AttributeTypeCode.Picklist] = typeof(PicklistValue),
-                [AttributeTypeCode.State] = typeof(PicklistValue),
-                [AttributeTypeCode.Status] = typeof(PicklistValue),
-                [AttributeTypeCode.String] = typeof(string),
-                [AttributeTypeCode.Uniqueidentifier] = typeof(Lookup)
-            };
-        }
+            [AttributeTypeCode.BigInt] = typeof(long),
+            [AttributeTypeCode.Boolean] = typeof(bool),
+            [AttributeTypeCode.Customer] = typeof(Lookup),
+            [AttributeTypeCode.DateTime] = typeof(DateTime),
+            [AttributeTypeCode.Decimal] = typeof(decimal),
+            [AttributeTypeCode.Double] = typeof(double),
+            [AttributeTypeCode.Integer] = typeof(int),
+            [AttributeTypeCode.Lookup] = typeof(Lookup),
+            [AttributeTypeCode.Memo] = typeof(string),
+            [AttributeTypeCode.Money] = typeof(decimal),
+            [AttributeTypeCode.Owner] = typeof(Lookup),
+            [AttributeTypeCode.Picklist] = typeof(PicklistValue),
+            [AttributeTypeCode.State] = typeof(PicklistValue),
+            [AttributeTypeCode.Status] = typeof(PicklistValue),
+            [AttributeTypeCode.String] = typeof(string),
+            [AttributeTypeCode.Uniqueidentifier] = typeof(Lookup)
+        };
 
         public ConditionTypeDescriptor(TreeNode node, FetchXmlBuilder fxb, TreeBuilderControl tree)
+            : base(node, fxb, tree)
         {
-            _node = node;
-            _fxb = fxb;
-            _tree = tree;
         }
 
         public override PropertyDescriptorCollection GetProperties()
         {
-            var dictionary = (Dictionary<string, string>)_node.Tag;
+            var dictionary = (Dictionary<string, string>)Node.Tag;
 
             // Same type descriptor used for <condition> and <value> nodes. If this is a <value> node, find the <condition>
-            var conditionNode = _node;
-            if (_node.Name == "value")
-                conditionNode = _node.Parent;
+            var conditionNode = Node;
+            if (Node.Name == "value")
+            {
+                conditionNode = Node.Parent;
+            }
             var conditionDictionary = (Dictionary<string, string>)conditionNode.Tag;
 
             var closestEntity = GetClosestEntityNode();
@@ -66,7 +59,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
             if (closestEntity != null && closestEntity.Name == "entity")
             {
                 entities.Add(null);
-                entities.AddRange(GetEntities(_tree.tvFetch.Nodes[0]).ToArray());
+                entities.AddRange(GetEntities(Tree.tvFetch.Nodes[0]).ToArray());
             }
             var entityReadOnly = entities.Count <= 1;
 
@@ -85,7 +78,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 String.Empty,
                 conditionDictionary,
                 "entity",
-                _tree,
+                Tree,
                 entities.Select(e => e?.ToString()).ToArray());
 
             var entity = (string)entityProp.GetValue(this);
@@ -94,11 +87,11 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 entityNode = new EntityNode(GetClosestEntityNode());
 
             var entityName = entityNode.EntityName;
-            if (_fxb.NeedToLoadEntity(entityName))
+            if (FXB.NeedToLoadEntity(entityName))
             {
-                _fxb.LoadEntityDetails(entityName, () => _tree.RefreshSelectedNode());
+                FXB.LoadEntityDetails(entityName, () => Tree.RefreshSelectedNode());
             }
-            var attributes = _fxb.GetDisplayAttributes(entityName);
+            var attributes = FXB.GetDisplayAttributes(entityName);
 
             var attributeProp = new AttributePropertyDescriptor(
                 "Attribute",
@@ -114,7 +107,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 String.Empty,
                 conditionDictionary,
                 "attribute",
-                _tree,
+                Tree,
                 attributes);
 
             var attributeName = (string) attributeProp.GetValue(this);
@@ -134,7 +127,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 ConditionOperator.Equal,
                 conditionDictionary,
                 "operator",
-                _tree,
+                Tree,
                 attribute);
 
             // Value property varies depending on the attribute and/or operator
@@ -168,19 +161,21 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                         null,
                         dictionary,
                         dictionary == conditionDictionary ? "value" : "#text",
-                        _tree,
+                        Tree,
                         attribute,
-                        _node,
-                        _fxb);
+                        Node,
+                        FXB);
                 }
             }
 
             if (dictionary == conditionDictionary)
             {
                 if (valueProp == null)
+                {
                     return new PropertyDescriptorCollection(new PropertyDescriptor[] { entityProp, attributeProp, operatorProp });
-                else
-                    return new PropertyDescriptorCollection(new PropertyDescriptor[] { entityProp, attributeProp, operatorProp, valueProp });
+                }
+                
+                return new PropertyDescriptorCollection(new PropertyDescriptor[] { entityProp, attributeProp, operatorProp, valueProp });
             }
             else
             {
@@ -199,21 +194,11 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                         null,
                         dictionary,
                         "#text",
-                        _tree);
+                        Tree);
                 }
 
                 return new PropertyDescriptorCollection(new PropertyDescriptor[] { valueProp });
             }
-        }
-
-        public override PropertyDescriptorCollection GetProperties(Attribute[] attributes)
-        {
-            return GetProperties();
-        }
-
-        public override object GetPropertyOwner(PropertyDescriptor pd)
-        {
-            return this;
         }
 
         private List<EntityNode> GetEntities(TreeNode node)
@@ -232,7 +217,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
 
         private TreeNode GetClosestEntityNode()
         {
-            var parentNode = _node.Parent;
+            var parentNode = Node.Parent;
             while (parentNode != null && parentNode.Name != "entity" && parentNode.Name != "link-entity")
             {
                 parentNode = parentNode.Parent;

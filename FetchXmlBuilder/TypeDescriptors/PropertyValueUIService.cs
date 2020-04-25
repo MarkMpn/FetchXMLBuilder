@@ -4,14 +4,15 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing.Design;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
 {
+    /// <summary>
+    /// Simple implementation of <see cref="IPropertyValueUIService"/> to allow adding property validation callbacks
+    /// </summary>
     class PropertyValueUIService : IPropertyValueUIService
     {
-        private List<PropertyValueUIHandler> _list;
+        private readonly List<PropertyValueUIHandler> _list;
 
         public PropertyValueUIService()
         {
@@ -35,7 +36,9 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
             var list = new ArrayList();
 
             foreach (var handler in _list)
+            {
                 handler(context, propDesc, list);
+            }
 
             return list.Cast<PropertyValueUIItem>().ToArray();
         }

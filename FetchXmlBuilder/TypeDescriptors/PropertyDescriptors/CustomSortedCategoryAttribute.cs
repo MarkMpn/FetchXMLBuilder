@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel;
 
-namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
+namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors.PropertyDescriptors
 {
     // https://stackoverflow.com/questions/823327/how-can-i-customize-category-sorting-on-a-propertygrid
     public class CustomSortedCategoryAttribute : CategoryAttribute

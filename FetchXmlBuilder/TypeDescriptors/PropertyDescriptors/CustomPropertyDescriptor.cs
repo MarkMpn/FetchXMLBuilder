@@ -2,20 +2,22 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Cinteros.Xrm.FetchXmlBuilder.DockControls;
 using Microsoft.Xrm.Sdk;
 
-namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
+namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors.PropertyDescriptors
 {
+    /// <summary>
+    /// A basic property descriptor that handles reading and writing to the attribute dictionary associated with each FetchXML node
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     class CustomPropertyDescriptor<T> : PropertyDescriptor, IValidatingPropertyDescriptor, ITypeConvertingPropertyDescriptor
     {
-        private object _owner;
-        private T _defaultValue;
-        private Dictionary<string, string> _dictionary;
-        private string _key;
-        private TreeBuilderControl _tree;
+        private readonly object _owner;
+        private readonly T _defaultValue;
+        private readonly Dictionary<string, string> _dictionary;
+        private readonly string _key;
+        private readonly TreeBuilderControl _tree;
 
         public CustomPropertyDescriptor(string name, string category, int categoryOrder, int categoryCount, string description, Attribute[] attrs, object owner, T defaultValue, Dictionary<string,string> dictionary, string key, TreeBuilderControl tree) : 
             base(name, CreateAttributes(attrs, category, categoryOrder, categoryCount, description))
@@ -32,10 +34,14 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
             var attrs = new List<Attribute>(attributes);
 
             if (!String.IsNullOrEmpty(category))
-                attrs.Add(new CustomSortedCategoryAttribute(category, (ushort) categoryOrder, (ushort) categoryCount));
+            {
+                attrs.Add(new CustomSortedCategoryAttribute(category, (ushort)categoryOrder, (ushort)categoryCount));
+            }
 
             if (!String.IsNullOrEmpty(description))
+            {
                 attrs.Add(new DescriptionAttribute(description));
+            }
 
             return attrs.ToArray();
         }
@@ -49,7 +55,9 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 var attr = Attributes.OfType<ReadOnlyAttribute>().SingleOrDefault();
 
                 if (attr == null)
+                {
                     return false;
+                }
 
                 return attr.IsReadOnly;
             }
@@ -70,7 +78,9 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
             var targetType = typeof(T);
 
             if (targetType.IsGenericType && targetType.GetGenericTypeDefinition() == typeof(Nullable<>))
+            {
                 targetType = targetType.GetGenericArguments()[0];
+            }
 
             try
             {
@@ -85,24 +95,36 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
         public virtual object ConvertValue(Type targetType, object value)
         {
             if (value == null)
+            {
                 return null;
+            }
 
             if (value.GetType() == targetType)
+            {
                 return value;
+            }
 
             if (targetType == typeof(string))
             {
                 if (value is bool b)
+                {
                     return b ? "true" : "false";
+                }
 
                 if (value is DateTime dt)
+                {
                     return dt.ToString("yyyy-MM-dd HH:mm:ss");
+                }
 
                 if (value is Lookup lookup)
+                {
                     value = lookup?.EntityReference.Id;
+                }
 
                 if (value is PicklistValue picklist)
+                {
                     value = picklist?.OptionSetValue.Value;
+                }
 
                 return value.ToString();
             }
@@ -110,7 +132,9 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
             if (value is string str)
             {
                 if (targetType.IsEnum)
+                {
                     return Enum.Parse(targetType, str);
+                }
 
                 if (targetType == typeof(Lookup))
                 {
@@ -120,7 +144,9 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 }
 
                 if (targetType == typeof(PicklistValue))
+                {
                     return new PicklistValue { OptionSetValue = new OptionSetValue(Int32.Parse(str)) };
+                }
             }
 
             return Convert.ChangeType(value, targetType);
@@ -146,14 +172,22 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 if (value is Lookup lookup)
                 {
                     if (!String.IsNullOrEmpty(lookup.EntityReference.LogicalName))
+                    {
                         _dictionary["uitype"] = lookup.EntityReference.LogicalName;
+                    }
                     else
+                    {
                         _dictionary.Remove("uitype");
+                    }
 
                     if (!String.IsNullOrEmpty(lookup.EntityReference.Name))
+                    {
                         _dictionary["uiname"] = lookup.EntityReference.Name;
+                    }
                     else
+                    {
                         _dictionary.Remove("uiname");
+                    }
                 }
             }
 

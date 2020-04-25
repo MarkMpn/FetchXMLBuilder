@@ -1,17 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Drawing.Design;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Cinteros.Xrm.FetchXmlBuilder.AppCode;
 using Cinteros.Xrm.FetchXmlBuilder.DockControls;
 using Microsoft.Xrm.Sdk.Metadata;
 using Microsoft.Xrm.Sdk.Query;
 
-namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
+namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors.PropertyDescriptors
 {
+    /// <summary>
+    /// A property descriptor to select a &lt;condition&gt; operator
+    /// </summary>
     class ConditionOperatorPropertyDescriptor : CustomPropertyDescriptor<ConditionOperator>
     {
         public ConditionOperatorPropertyDescriptor(string name, string category, int categoryOrder, int categoryCount, string description, Attribute[] attrs, object owner, ConditionOperator defaultValue, Dictionary<string,string> dictionary, string key, TreeBuilderControl tree, AttributeMetadata attribute) :
@@ -42,7 +42,9 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 var match = values.SingleOrDefault(op => op.GetValue() == str);
 
                 if (match != null)
+                {
                     return match.Operator;
+                }
             }
             else if (targetType == typeof(string) && value is ConditionOperator op)
             {
@@ -72,10 +74,13 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
 
             public override StandardValuesCollection GetStandardValues(ITypeDescriptorContext context)
             {
+                // Show a list of operators that are applicable to the type of attribute that is being filtered on
                 var attribute = ((ConditionOperatorPropertyDescriptor)context.PropertyDescriptor).AttributeMetadata;
 
                 if (attribute == null)
+                {
                     return new StandardValuesCollection(OperatorItem.GetConditionsByAttributeType(null).Select(op => op.Operator).ToArray());
+                }
 
                 return new StandardValuesCollection(OperatorItem.GetConditionsByAttributeType(attribute.AttributeType).Select(op => op.Operator).ToArray());
             }

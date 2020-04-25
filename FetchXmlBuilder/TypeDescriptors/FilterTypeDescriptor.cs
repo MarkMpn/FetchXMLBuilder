@@ -1,30 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using Cinteros.Xrm.FetchXmlBuilder.DockControls;
+using Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors.PropertyDescriptors;
 
 namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
 {
-    class FilterTypeDescriptor : CustomTypeDescriptor
-    {
-        private TreeNode _node;
-        private FetchXmlBuilder _fxb;
-        private TreeBuilderControl _tree;
-        
+    /// <summary>
+    /// Provides a type descriptor for the &lt;filter&gt; element
+    /// </summary>
+    class FilterTypeDescriptor : BaseTypeDescriptor
+    {   
         public FilterTypeDescriptor(TreeNode node, FetchXmlBuilder fxb, TreeBuilderControl tree)
+            : base(node, fxb, tree)
         {
-            _node = node;
-            _fxb = fxb;
-            _tree = tree;
         }
 
         public override PropertyDescriptorCollection GetProperties()
         {
-            var dictionary = (Dictionary<string, string>)_node.Tag;
+            var dictionary = (Dictionary<string, string>)Node.Tag;
 
             var filterTypeProp = new CustomPropertyDescriptor<filterType>(
                 "Type",
@@ -37,19 +32,9 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 filterType.and,
                 dictionary,
                 "type",
-                _tree);
+                Tree);
 
             return new PropertyDescriptorCollection(new[] { filterTypeProp });
-        }
-
-        public override PropertyDescriptorCollection GetProperties(Attribute[] attributes)
-        {
-            return GetProperties();
-        }
-
-        public override object GetPropertyOwner(PropertyDescriptor pd)
-        {
-            return this;
         }
     }
 }

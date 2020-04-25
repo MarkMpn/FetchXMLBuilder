@@ -3,32 +3,25 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.Design;
 using System.Drawing.Design;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using Cinteros.Xrm.FetchXmlBuilder.AppCode;
 using Cinteros.Xrm.FetchXmlBuilder.DockControls;
-using Microsoft.Xrm.Sdk.Query;
+using Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors.PropertyDescriptors;
 
 namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
 {
-    class CommentTypeDescriptor : CustomTypeDescriptor
+    /// <summary>
+    /// Provides a type descriptor for comment elements
+    /// </summary>
+    class CommentTypeDescriptor : BaseTypeDescriptor
     {
-        private TreeNode _node;
-        private FetchXmlBuilder _fxb;
-        private TreeBuilderControl _tree;
-
         public CommentTypeDescriptor(TreeNode node, FetchXmlBuilder fxb, TreeBuilderControl tree)
+            : base(node, fxb, tree)
         {
-            _node = node;
-            _fxb = fxb;
-            _tree = tree;
         }
 
         public override PropertyDescriptorCollection GetProperties()
         {
-            var dictionary = (Dictionary<string, string>)_node.Tag;
+            var dictionary = (Dictionary<string, string>)Node.Tag;
 
             var textProp = new CustomPropertyDescriptor<string>(
                 "Text",
@@ -45,18 +38,9 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 null,
                 dictionary,
                 "#comment",
-                _tree);
+                Tree);
+
             return new PropertyDescriptorCollection(new PropertyDescriptor[] { textProp });
-        }
-
-        public override PropertyDescriptorCollection GetProperties(Attribute[] attributes)
-        {
-            return GetProperties();
-        }
-
-        public override object GetPropertyOwner(PropertyDescriptor pd)
-        {
-            return this;
         }
     }
 }

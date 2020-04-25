@@ -2,21 +2,21 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing.Design;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Forms.Design;
 using Cinteros.Xrm.FetchXmlBuilder.AppCode;
 using Cinteros.Xrm.FetchXmlBuilder.DockControls;
 using Microsoft.Xrm.Sdk.Metadata;
 
-namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
+namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors.PropertyDescriptors
 {
+    /// <summary>
+    /// A property descriptor that links to a relationship
+    /// </summary>
     class RelationshipPropertyDescriptor : PropertyDescriptor
     {
-        private object _owner;
-        private TreeBuilderControl _tree;
+        private readonly object _owner;
+        private readonly TreeBuilderControl _tree;
 
         public RelationshipPropertyDescriptor(string name, string category, int categoryOrder, int categoryCount, string description, Attribute[] attrs, object owner, TreeBuilderControl tree) :
             base(name, CreateAttributes(attrs, category, categoryOrder, categoryCount, description))
@@ -30,10 +30,14 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
             var attrs = new List<Attribute>(attributes);
 
             if (!String.IsNullOrEmpty(category))
+            {
                 attrs.Add(new CustomSortedCategoryAttribute(category, (ushort)categoryOrder, (ushort)categoryCount));
+            }
 
             if (!String.IsNullOrEmpty(description))
+            {
                 attrs.Add(new DescriptionAttribute(description));
+            }
 
             attrs.Add(new EditorAttribute(typeof(RelationshipEditor), typeof(UITypeEditor)));
 
@@ -71,23 +75,31 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 foreach (var rel in mo)
                 {
                     if (entity == rel.ReferencedEntity && from == rel.ReferencedAttribute && to == rel.ReferencingAttribute)
+                    {
                         return new EntityRelationship(rel, parententityname, link.FXB);
+                    }
                 }
 
                 foreach (var rel in om)
                 {
                     if (entity == rel.ReferencingEntity && from == rel.ReferencingAttribute && to == rel.ReferencedAttribute)
+                    {
                         return new EntityRelationship(rel, parententityname, link.FXB);
+                    }
                 }
 
                 var greatparententityname = link.Node.Parent.Parent != null ? TreeNodeHelper.GetAttributeFromNode(link.Node.Parent.Parent, "name") : "";
                 foreach (var rel in mm)
                 {
                     if (parententityname == rel.IntersectEntityName)
+                    {
                         return new EntityRelationship(rel, parententityname, link.FXB, greatparententityname);
+                    }
 
                     if (entity == rel.IntersectEntityName)
+                    {
                         return new EntityRelationship(rel, parententityname, link.FXB);
+                    }
                 }
             }
 
@@ -101,7 +113,9 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
         public override void SetValue(object component, object value)
         {
             if (value == null)
+            {
                 return;
+            }
 
             var rel = (EntityRelationship)value;
             var link = (LinkEntityTypeDescriptor)component;

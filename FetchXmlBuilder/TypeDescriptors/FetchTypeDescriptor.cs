@@ -1,30 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using Cinteros.Xrm.FetchXmlBuilder.DockControls;
+using Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors.PropertyDescriptors;
 
 namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
 {
-    class FetchTypeDescriptor : CustomTypeDescriptor
-    {
-        private TreeNode _node;
-        private FetchXmlBuilder _fxb;
-        private TreeBuilderControl _tree;
-        
+    /// <summary>
+    /// Provides a type descriptor for the &lt;fetch&gt; element
+    /// </summary>
+    class FetchTypeDescriptor : BaseTypeDescriptor
+    {   
         public FetchTypeDescriptor(TreeNode node, FetchXmlBuilder fxb, TreeBuilderControl tree)
+            : base(node, fxb, tree)
         {
-            _node = node;
-            _fxb = fxb;
-            _tree = tree;
         }
 
         public override PropertyDescriptorCollection GetProperties()
         {
-            var dictionary = (Dictionary<string, string>)_node.Tag;
+            var dictionary = (Dictionary<string, string>)Node.Tag;
 
             var topProp = new CustomPropertyDescriptor<int?>(
                 "Top",
@@ -37,7 +32,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 null,
                 dictionary,
                 "top",
-                _tree);
+                Tree);
 
             var distinctProp = new CustomPropertyDescriptor<bool>(
                 "Distinct",
@@ -50,7 +45,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 false,
                 dictionary,
                 "distinct",
-                _tree);
+                Tree);
 
             var noLockProp = new CustomPropertyDescriptor<bool>(
                 "No Lock",
@@ -63,7 +58,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 false,
                 dictionary,
                 "no-lock",
-                _tree);
+                Tree);
 
             var aggregateProp = new CustomPropertyDescriptor<bool>(
                 "Aggregate",
@@ -76,7 +71,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 false,
                 dictionary,
                 "aggregate",
-                _tree);
+                Tree);
 
             var totalRecordCountProp = new CustomPropertyDescriptor<bool>(
                 "Total Record Count",
@@ -89,7 +84,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 false,
                 dictionary,
                 "returntotalrecordcount",
-                _tree);
+                Tree);
 
             var pageSizeProp = new CustomPropertyDescriptor<int>(
                 "Page Size",
@@ -102,7 +97,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 5000,
                 dictionary,
                 "count",
-                _tree);
+                Tree);
 
             var pageNumberProp = new CustomPropertyDescriptor<int>(
                 "Page Number",
@@ -115,7 +110,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 1,
                 dictionary,
                 "page",
-                _tree);
+                Tree);
 
             var pagingCookieProp = new CustomPropertyDescriptor<string>(
                 "Paging Cookie",
@@ -128,19 +123,9 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 null,
                 dictionary,
                 "paging-cookie",
-                _tree);
+                Tree);
 
             return new PropertyDescriptorCollection(new PropertyDescriptor[] { topProp, distinctProp, noLockProp, aggregateProp, totalRecordCountProp, pageSizeProp, pageNumberProp, pagingCookieProp });
-        }
-
-        public override PropertyDescriptorCollection GetProperties(Attribute[] attributes)
-        {
-            return GetProperties();
-        }
-
-        public override object GetPropertyOwner(PropertyDescriptor pd)
-        {
-            return this;
         }
     }
 }

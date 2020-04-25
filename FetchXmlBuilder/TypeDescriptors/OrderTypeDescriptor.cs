@@ -2,62 +2,31 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
-using System.Linq;
 using System.Windows.Forms;
 using Cinteros.Xrm.FetchXmlBuilder.AppCode;
 using Cinteros.Xrm.FetchXmlBuilder.DockControls;
+using Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors.PropertyDescriptors;
 using Microsoft.Xrm.Sdk.Metadata;
-using Microsoft.Xrm.Sdk.Query;
 
 namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
 {
-    class OrderTypeDescriptor : CustomTypeDescriptor
+    /// <summary>
+    /// Provides a type descriptor for the &lt;order&gt; element
+    /// </summary>
+    class OrderTypeDescriptor : BaseTypeDescriptor
     {
-        private TreeNode _node;
-        private FetchXmlBuilder _fxb;
-        private TreeBuilderControl _tree;
-        private AttributeMetadata[] _attributes;
+        private readonly AttributeMetadata[] _attributes;
 
         public OrderTypeDescriptor(TreeNode node, FetchXmlBuilder fxb, TreeBuilderControl tree, AttributeMetadata[] attributes)
+            : base(node, fxb, tree)
         {
-            _node = node;
-            _fxb = fxb;
-            _tree = tree;
             _attributes = attributes;
         }
 
-        public TreeNode Node { get => _node; }
-
-        public FetchXmlBuilder FXB { get => _fxb; }
-
         public override PropertyDescriptorCollection GetProperties()
         {
-            var dictionary = (Dictionary<string, string>)_node.Tag;
-            var aggregate = _tree.GetFetchType().aggregateSpecified && _tree.GetFetchType().aggregate;
-
-            /*
-             * 
-        var aggregate = TreeBuilderControl.IsFetchAggregate(Node);
-        if (!aggregate)
-        {
-            cmbAttribute.Items.Clear();
-            if (attributes != null)
-            {
-                foreach (var attribute in attributes)
-                {
-                    AttributeItem.AddAttributeToComboBox(cmbAttribute, attribute, false, friendly);
-                }
-            }
-        }
-        else
-        {
-            cmbAlias.Items.Clear();
-            cmbAlias.Items.Add("");
-            cmbAlias.Items.AddRange(GetAliases(Tree.tvFetch.Nodes[0]).ToArray());
-        }
-        cmbAttribute.Enabled = !aggregate;
-        cmbAlias.Enabled = aggregate;
-        */
+            var dictionary = (Dictionary<string, string>)Node.Tag;
+            var aggregate = Tree.GetFetchType().aggregateSpecified && Tree.GetFetchType().aggregate;
 
             var nameProp = new AttributePropertyDescriptor(
                 "Atttribute",
@@ -73,7 +42,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 null,
                 dictionary,
                 "attribute",
-                _tree,
+                Tree,
                 _attributes);
 
             var aliasProp = new CustomPropertyDescriptor<string>(
@@ -91,7 +60,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 null,
                 dictionary,
                 "alias",
-                _tree);
+                Tree);
 
             var descProp = new CustomPropertyDescriptor<bool>(
                 "Descending",
@@ -104,19 +73,9 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 false,
                 dictionary,
                 "descending",
-                _tree);
+                Tree);
 
             return new PropertyDescriptorCollection(new PropertyDescriptor[] { nameProp, aliasProp, descProp });
-        }
-
-        public override PropertyDescriptorCollection GetProperties(Attribute[] attributes)
-        {
-            return GetProperties();
-        }
-
-        public override object GetPropertyOwner(PropertyDescriptor pd)
-        {
-            return this;
         }
 
         class AliasConverter : TypeConverter
@@ -134,7 +93,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
             public override StandardValuesCollection GetStandardValues(ITypeDescriptorContext context)
             {
                 var order = (OrderTypeDescriptor)context.Instance;
-                var aliases = GetAliases(order._tree.tvFetch.Nodes[0]);
+                var aliases = GetAliases(order.Tree.tvFetch.Nodes[0]);
 
                 return new StandardValuesCollection(aliases);
             }

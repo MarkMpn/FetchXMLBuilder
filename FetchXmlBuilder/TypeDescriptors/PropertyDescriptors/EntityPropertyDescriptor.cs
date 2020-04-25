@@ -1,42 +1,43 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Drawing.Design;
 using System.Globalization;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Cinteros.Xrm.FetchXmlBuilder.DockControls;
-using Microsoft.Xrm.Sdk.Metadata;
 
-namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
+namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors.PropertyDescriptors
 {
-    class AttributePropertyDescriptor : CustomPropertyDescriptor<string>
+    /// <summary>
+    /// A property descriptor to select an entity from the list of entities currently in the FetchXML tree
+    /// </summary>
+    class EntityPropertyDescriptor : CustomPropertyDescriptor<string>
     {
-        public AttributePropertyDescriptor(string name, string category, int categoryOrder, int categoryCount, string description, Attribute[] attrs, object owner, string defaultValue, Dictionary<string,string> dictionary, string key, TreeBuilderControl tree, AttributeMetadata[] attributes) :
+        public EntityPropertyDescriptor(string name, string category, int categoryOrder, int categoryCount, string description, Attribute[] attrs, object owner, string defaultValue, Dictionary<string,string> dictionary, string key, TreeBuilderControl tree, string[] entities) :
             base(name, category, categoryOrder, categoryCount, description, CreateAttributes(attrs), owner, defaultValue, dictionary, key, tree)
         {
-            AttributeMetadata = attributes;
+            Entities = entities;
         }
 
         static Attribute[] CreateAttributes(Attribute[] attributes)
         {
             var attrs = new List<Attribute>(attributes);
-            attrs.Add(new TypeConverterAttribute(typeof(AttributeConverter)));
+            attrs.Add(new TypeConverterAttribute(typeof(EntityConverter)));
             return attrs.ToArray();
         }
 
-        public AttributeMetadata[] AttributeMetadata { get; }
+        public string[] Entities { get; }
 
         public override string GetValidationError(ITypeDescriptorContext context)
         {
-            if (Attributes != null && !AttributeMetadata.Any(a => a.LogicalName == (string)GetValue(context.Instance)))
-                return "Unknown attribute";
+            var entityName = (string)GetValue(context.Instance);
+
+            if (!String.IsNullOrEmpty(entityName) && Entities != null && !Entities.Contains(entityName))
+                return "Unknown entity";
 
             return base.GetValidationError(context);
         }
 
-        class AttributeConverter : TypeConverter
+        class EntityConverter : TypeConverter
         {
             public override bool GetStandardValuesSupported(ITypeDescriptorContext context)
             {
@@ -50,9 +51,9 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
 
             public override StandardValuesCollection GetStandardValues(ITypeDescriptorContext context)
             {
-                var descriptor = (AttributePropertyDescriptor)context.PropertyDescriptor;
+                var descriptor = (EntityPropertyDescriptor)context.PropertyDescriptor;
 
-                return new StandardValuesCollection(descriptor.AttributeMetadata.OrderBy(a => a.LogicalName).Select(a => a.LogicalName).ToArray());
+                return new StandardValuesCollection(descriptor.Entities.OrderBy(a => a).ToArray());
             }
 
             public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)

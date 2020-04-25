@@ -1,47 +1,44 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Drawing.Design;
 using System.Globalization;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using System.Windows.Forms.Design;
-using Cinteros.Xrm.FetchXmlBuilder.Controls;
 using Cinteros.Xrm.FetchXmlBuilder.DockControls;
 using Microsoft.Xrm.Sdk.Metadata;
 
-namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
+namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors.PropertyDescriptors
 {
-    class EntityPropertyDescriptor : CustomPropertyDescriptor<string>
+    /// <summary>
+    /// A property descriptor that allows selecting an attribute from a list of metadata
+    /// </summary>
+    class AttributePropertyDescriptor : CustomPropertyDescriptor<string>
     {
-        public EntityPropertyDescriptor(string name, string category, int categoryOrder, int categoryCount, string description, Attribute[] attrs, object owner, string defaultValue, Dictionary<string,string> dictionary, string key, TreeBuilderControl tree, string[] entities) :
+        public AttributePropertyDescriptor(string name, string category, int categoryOrder, int categoryCount, string description, Attribute[] attrs, object owner, string defaultValue, Dictionary<string,string> dictionary, string key, TreeBuilderControl tree, AttributeMetadata[] attributes) :
             base(name, category, categoryOrder, categoryCount, description, CreateAttributes(attrs), owner, defaultValue, dictionary, key, tree)
         {
-            Entities = entities;
+            AttributeMetadata = attributes;
         }
 
         static Attribute[] CreateAttributes(Attribute[] attributes)
         {
             var attrs = new List<Attribute>(attributes);
-            attrs.Add(new TypeConverterAttribute(typeof(EntityConverter)));
+            attrs.Add(new TypeConverterAttribute(typeof(AttributeConverter)));
             return attrs.ToArray();
         }
 
-        public string[] Entities { get; }
+        public AttributeMetadata[] AttributeMetadata { get; }
 
         public override string GetValidationError(ITypeDescriptorContext context)
         {
-            var entityName = (string)GetValue(context.Instance);
-
-            if (!String.IsNullOrEmpty(entityName) && Entities != null && !Entities.Contains(entityName))
-                return "Unknown entity";
+            if (Attributes != null && !AttributeMetadata.Any(a => a.LogicalName == (string)GetValue(context.Instance)))
+            {
+                return "Unknown attribute";
+            }
 
             return base.GetValidationError(context);
         }
 
-        class EntityConverter : TypeConverter
+        class AttributeConverter : TypeConverter
         {
             public override bool GetStandardValuesSupported(ITypeDescriptorContext context)
             {
@@ -55,15 +52,17 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
 
             public override StandardValuesCollection GetStandardValues(ITypeDescriptorContext context)
             {
-                var descriptor = (EntityPropertyDescriptor)context.PropertyDescriptor;
+                var descriptor = (AttributePropertyDescriptor)context.PropertyDescriptor;
 
-                return new StandardValuesCollection(descriptor.Entities.OrderBy(a => a).ToArray());
+                return new StandardValuesCollection(descriptor.AttributeMetadata.OrderBy(a => a.LogicalName).Select(a => a.LogicalName).ToArray());
             }
 
             public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
             {
                 if (sourceType == typeof(string))
+                {
                     return true;
+                }
 
                 return base.CanConvertFrom(context, sourceType);
             }
@@ -71,7 +70,9 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
             public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
             {
                 if (value is string)
+                {
                     return value;
+                }
 
                 return base.ConvertFrom(context, culture, value);
             }

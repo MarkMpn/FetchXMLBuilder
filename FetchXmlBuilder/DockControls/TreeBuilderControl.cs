@@ -558,7 +558,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.DockControls
                                         if (node.Name == "attribute")
                                         {
                                             ctrl = new attributeControl(node, attributes, fxb, this);
-                                            descriptor = new AttributeTypeDescriptor(node, attributes, this);
+                                            descriptor = new AttributeTypeDescriptor(node, fxb, this, attributes);
                                         }
                                         else if (node.Name == "order")
                                         {

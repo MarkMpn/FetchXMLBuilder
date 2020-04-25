@@ -2,37 +2,29 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using Cinteros.Xrm.FetchXmlBuilder.AppCode;
 using Cinteros.Xrm.FetchXmlBuilder.DockControls;
+using Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors.PropertyDescriptors;
 using Microsoft.Xrm.Sdk.Query;
 
 namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
 {
-    class LinkEntityTypeDescriptor : CustomTypeDescriptor
+    /// <summary>
+    /// Provides a type descriptor for the &lt;link-entity&gt; element
+    /// </summary>
+    class LinkEntityTypeDescriptor : BaseTypeDescriptor
     {
-        private TreeNode _node;
-        private FetchXmlBuilder _fxb;
-        private TreeBuilderControl _tree;
-
         public LinkEntityTypeDescriptor(TreeNode node, FetchXmlBuilder fxb, TreeBuilderControl tree)
+            : base(node, fxb, tree)
         {
-            _node = node;
-            _fxb = fxb;
-            _tree = tree;
         }
-
-        public TreeNode Node { get => _node; }
-
-        public FetchXmlBuilder FXB { get => _fxb; }
 
         public override PropertyDescriptorCollection GetProperties()
         {
-            var dictionary = (Dictionary<string, string>)_node.Tag;
+            var dictionary = (Dictionary<string, string>)Node.Tag;
 
-            var entities = _fxb.GetDisplayEntities();
+            var entities = FXB.GetDisplayEntities();
             var nameProp = new EntityPropertyDescriptor(
                 "Name",
                 "Entity",
@@ -47,7 +39,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 null,
                 dictionary,
                 "name",
-                _tree,
+                Tree,
                 entities.Keys.ToArray());
 
             var aliasProp = new CustomPropertyDescriptor<string>(
@@ -61,7 +53,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 null,
                 dictionary,
                 "alias",
-                _tree);
+                Tree);
 
             var fromProp = new AttributePropertyDescriptor(
                 "From",
@@ -74,10 +66,10 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 null,
                 dictionary,
                 "from",
-                _tree,
-                _fxb.GetDisplayAttributes((string)nameProp.GetValue(this)));
+                Tree,
+                FXB.GetDisplayAttributes((string)nameProp.GetValue(this)));
 
-            var parententityname = TreeNodeHelper.GetAttributeFromNode(_node.Parent, "name");
+            var parententityname = TreeNodeHelper.GetAttributeFromNode(Node.Parent, "name");
             var toProp = new AttributePropertyDescriptor(
                 "To",
                 "Join",
@@ -89,8 +81,8 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 null,
                 dictionary,
                 "to",
-                _tree,
-                _fxb.GetDisplayAttributes(parententityname));
+                Tree,
+                FXB.GetDisplayAttributes(parententityname));
 
             var typeProp = new CustomPropertyDescriptor<JoinOperator>(
                 "Type",
@@ -103,7 +95,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 JoinOperator.Inner,
                 dictionary,
                 "link-type",
-                _tree);
+                Tree);
 
             var intersectProp = new CustomPropertyDescriptor<bool>(
                 "Intersect",
@@ -116,7 +108,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 false,
                 dictionary,
                 "intersect",
-                _tree);
+                Tree);
 
             var visibleProp = new CustomPropertyDescriptor<bool>(
                 "Visible",
@@ -129,7 +121,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 false,
                 dictionary,
                 "visible",
-                _tree);
+                Tree);
 
             var relationshipProp = new RelationshipPropertyDescriptor(
                 "Relationship",
@@ -142,19 +134,9 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                     new RefreshPropertiesAttribute(RefreshProperties.All)
                 },
                 this,
-                _tree);
+                Tree);
 
             return new PropertyDescriptorCollection(new PropertyDescriptor[] { nameProp, aliasProp, fromProp, toProp, typeProp, intersectProp, visibleProp, relationshipProp });
-        }
-
-        public override PropertyDescriptorCollection GetProperties(Attribute[] attributes)
-        {
-            return GetProperties();
-        }
-
-        public override object GetPropertyOwner(PropertyDescriptor pd)
-        {
-            return this;
         }
     }
 }

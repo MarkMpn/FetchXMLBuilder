@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Design;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors.PropertyDescriptors;
 
 namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
 {
+    /// <summary>
+    /// Provides a site for the property grid to get additional services
+    /// </summary>
     class BasicSite : ISite
     {
         public BasicSite()
@@ -26,6 +26,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
 
         public object GetService(Type serviceType)
         {
+            // Return an IPropertyValueUIService to add validation feedback
             if (serviceType == typeof(IPropertyValueUIService))
             {
                 var service = new PropertyValueUIService();
@@ -38,6 +39,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
 
         private void ValidateProperty(ITypeDescriptorContext context, PropertyDescriptor propDesc, ArrayList valueUIItemList)
         {
+            // Allow each property descriptor to implement it's own validation logic
             if (propDesc is IValidatingPropertyDescriptor validating)
             {
                 var msg = validating.GetValidationError(context);

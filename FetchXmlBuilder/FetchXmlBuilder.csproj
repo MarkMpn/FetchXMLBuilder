@@ -347,6 +347,7 @@
       <DependentUpon>fetch.xsd</DependentUpon>
     </Compile>
     <Compile Include="AppCode\SQLQueryGenerator.cs" />
+    <Compile Include="TypeDescriptors\CommentTypeDescriptor.cs" />
     <Compile Include="TypeDescriptors\ConditionValuePropertyDescriptor.cs" />
     <Compile Include="TypeDescriptors\ConditionOperatorPropertyDescriptor.cs" />
     <Compile Include="TypeDescriptors\CustomSortedCategoryAttribute.cs" />

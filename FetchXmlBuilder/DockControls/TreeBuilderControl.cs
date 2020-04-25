@@ -587,6 +587,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.DockControls
 
                         case "#comment":
                             ctrl = new commentControl(collec, this);
+                            descriptor = new CommentTypeDescriptor(node, fxb, this);
                             break;
 
                         default:

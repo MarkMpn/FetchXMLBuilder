@@ -526,32 +526,45 @@ namespace Cinteros.Xrm.FetchXmlBuilder
         internal AttributeMetadata[] GetDisplayAttributes(string entityName)
         {
             var result = new List<AttributeMetadata>();
-            AttributeMetadata[] attributes = null;
-            if (entities != null && entities.ContainsKey(entityName))
+            if (!String.IsNullOrEmpty(entityName))
             {
-                attributes = entities[entityName].Attributes;
-                if (attributes != null)
+                AttributeMetadata[] attributes = null;
+                if (entities != null && entities.ContainsKey(entityName))
                 {
-                    foreach (var attribute in attributes)
+                    attributes = entities[entityName].Attributes;
+                    if (attributes != null)
                     {
-                        if (!settings.Attribute.All)
+                        foreach (var attribute in attributes)
                         {
-                            if (attribute.IsValidForRead == false) { continue; }
-                            if (!string.IsNullOrEmpty(attribute.AttributeOf)) { continue; }
-                            if (!settings.Attribute.Managed && attribute.IsManaged == true) { continue; }
-                            if (!settings.Attribute.Unmanaged && attribute.IsManaged == false) { continue; }
-                            if (!settings.Attribute.Customizable && attribute.IsCustomizable.Value) { continue; }
-                            if (!settings.Attribute.Uncustomizable && !attribute.IsCustomizable.Value) { continue; }
-                            if (!settings.Attribute.Standard && attribute.IsCustomAttribute == false) { continue; }
-                            if (!settings.Attribute.Custom && attribute.IsCustomAttribute == true) { continue; }
-                            if (settings.Attribute.OnlyValidAF && attribute.IsValidForAdvancedFind.Value == false) { continue; }
-                            if (settings.Attribute.OnlyValidRead && attribute.IsValidForRead.Value == false) { continue; }
+                            if (!settings.Attribute.All)
+                            {
+                                if (attribute.IsValidForRead == false) { continue; }
+                                if (!string.IsNullOrEmpty(attribute.AttributeOf)) { continue; }
+                                if (!settings.Attribute.Managed && attribute.IsManaged == true) { continue; }
+                                if (!settings.Attribute.Unmanaged && attribute.IsManaged == false) { continue; }
+                                if (!settings.Attribute.Customizable && attribute.IsCustomizable.Value) { continue; }
+                                if (!settings.Attribute.Uncustomizable && !attribute.IsCustomizable.Value) { continue; }
+                                if (!settings.Attribute.Standard && attribute.IsCustomAttribute == false) { continue; }
+                                if (!settings.Attribute.Custom && attribute.IsCustomAttribute == true) { continue; }
+                                if (settings.Attribute.OnlyValidAF && attribute.IsValidForAdvancedFind.Value == false) { continue; }
+                                if (settings.Attribute.OnlyValidRead && attribute.IsValidForRead.Value == false) { continue; }
+                            }
+                            result.Add(attribute);
                         }
-                        result.Add(attribute);
                     }
                 }
             }
             return result.ToArray();
+        }
+
+        internal string GetPrimaryIdAttribute(string entityName)
+        {
+            if (entities != null && entities.TryGetValue(entityName, out var entity))
+            {
+                return entity.PrimaryIdAttribute;
+            }
+
+            return null;
         }
 
         internal Dictionary<string, EntityMetadata> GetDisplayEntities()

@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing.Design;
+using System.Linq;
 using System.Windows.Forms;
 using System.Windows.Forms.Design;
 using Cinteros.Xrm.FetchXmlBuilder.AppCode;
 using Cinteros.Xrm.FetchXmlBuilder.DockControls;
+using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Metadata;
 
 namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors.PropertyDescriptors
@@ -76,7 +78,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors.PropertyDescriptors
                 {
                     if (entity == rel.ReferencedEntity && from == rel.ReferencedAttribute && to == rel.ReferencingAttribute)
                     {
-                        return new EntityRelationship(rel, parententityname, link.FXB);
+                        return new EntityRelationship(rel, EntityRole.Referencing, parententityname, link.FXB);
                     }
                 }
 
@@ -84,7 +86,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors.PropertyDescriptors
                 {
                     if (entity == rel.ReferencingEntity && from == rel.ReferencingAttribute && to == rel.ReferencedAttribute)
                     {
-                        return new EntityRelationship(rel, parententityname, link.FXB);
+                        return new EntityRelationship(rel, EntityRole.Referenced, parententityname, link.FXB);
                     }
                 }
 
@@ -93,12 +95,28 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors.PropertyDescriptors
                 {
                     if (parententityname == rel.IntersectEntityName)
                     {
-                        return new EntityRelationship(rel, parententityname, link.FXB, greatparententityname);
+                        if (to == rel.Entity1IntersectAttribute && greatparententityname == rel.Entity2LogicalName && entity == rel.Entity1LogicalName)
+                        {
+                            return new EntityRelationship(rel, EntityRole.Referenced, parententityname, link.FXB, greatparententityname);
+                        }
+
+                        if (to == rel.Entity2IntersectAttribute && greatparententityname == rel.Entity1LogicalName && entity == rel.Entity2LogicalName)
+                        {
+                            return new EntityRelationship(rel, EntityRole.Referencing, parententityname, link.FXB, greatparententityname);
+                        }
                     }
 
                     if (entity == rel.IntersectEntityName)
                     {
-                        return new EntityRelationship(rel, parententityname, link.FXB);
+                        if (from == rel.Entity1IntersectAttribute)
+                        {
+                            return new EntityRelationship(rel, EntityRole.Referencing, parententityname, link.FXB);
+                        }
+
+                        if (from == rel.Entity2IntersectAttribute)
+                        {
+                            return new EntityRelationship(rel, EntityRole.Referenced, parententityname, link.FXB);
+                        }
                     }
                 }
             }
@@ -129,13 +147,13 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors.PropertyDescriptors
             if (rel.Relationship is OneToManyRelationshipMetadata)
             {
                 var om = (OneToManyRelationshipMetadata)rel.Relationship;
-                if (parent == om.ReferencedEntity)
+                if (parent == om.ReferencedEntity && rel.Role == EntityRole.Referenced)
                 {
                     entity = om.ReferencingEntity;
                     from = om.ReferencingAttribute;
                     to = om.ReferencedAttribute;
                 }
-                else if (parent == om.ReferencingEntity)
+                else if (parent == om.ReferencingEntity && rel.Role == EntityRole.Referencing)
                 {
                     entity = om.ReferencedEntity;
                     from = om.ReferencedAttribute;
@@ -150,19 +168,33 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors.PropertyDescriptors
             else if (rel.Relationship is ManyToManyRelationshipMetadata)
             {
                 var mm = (ManyToManyRelationshipMetadata)rel.Relationship;
+                
+                if (link.FXB.NeedToLoadEntity(mm.Entity1LogicalName))
+                {
+                    link.FXB.LoadEntityDetails(mm.Entity1LogicalName, null, false);
+                }
+
+                if (link.FXB.NeedToLoadEntity(mm.Entity2LogicalName))
+                {
+                    link.FXB.LoadEntityDetails(mm.Entity2LogicalName, null, false);
+                }
+
+                var entity1PrimaryKey = link.FXB.GetPrimaryIdAttribute(mm.Entity1LogicalName);
+                var entity2PrimaryKey = link.FXB.GetPrimaryIdAttribute(mm.Entity2LogicalName);
+
                 if (parent == mm.IntersectEntityName)
                 {
                     var greatparent = TreeNodeHelper.GetAttributeFromNode(link.Node.Parent.Parent, "name");
-                    if (greatparent == mm.Entity1LogicalName)
+                    if (greatparent == mm.Entity1LogicalName && rel.Role == EntityRole.Referencing)
                     {
                         entity = mm.Entity2LogicalName;
-                        from = mm.Entity2IntersectAttribute;
+                        from = entity2PrimaryKey;
                         to = mm.Entity2IntersectAttribute;
                     }
-                    else if (greatparent == mm.Entity2LogicalName)
+                    else if (greatparent == mm.Entity2LogicalName && rel.Role == EntityRole.Referenced)
                     {
                         entity = mm.Entity1LogicalName;
-                        from = mm.Entity1IntersectAttribute;
+                        from = entity1PrimaryKey;
                         to = mm.Entity1IntersectAttribute;
                     }
                     else
@@ -174,15 +206,15 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors.PropertyDescriptors
                 else
                 {
                     entity = mm.IntersectEntityName;
-                    if (parent == mm.Entity1LogicalName)
+                    if (parent == mm.Entity1LogicalName && rel.Role == EntityRole.Referencing)
                     {
                         from = mm.Entity1IntersectAttribute;
-                        to = mm.Entity1IntersectAttribute;
+                        to = entity1PrimaryKey;
                     }
-                    else if (parent == mm.Entity2LogicalName)
+                    else if (parent == mm.Entity2LogicalName && rel.Role == EntityRole.Referenced)
                     {
                         from = mm.Entity2IntersectAttribute;
-                        to = mm.Entity2IntersectAttribute;
+                        to = entity2PrimaryKey;
                     }
                     else
                     {
@@ -233,7 +265,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors.PropertyDescriptors
                         list.Clear();
                         foreach (var rel in mo)
                         {
-                            list.Add(new EntityRelationship(rel, parententityname, link.FXB));
+                            list.Add(new EntityRelationship(rel, EntityRole.Referencing, parententityname, link.FXB));
                         }
                         list.Sort();
                         listBox.Items.AddRange(list.ToArray());
@@ -244,7 +276,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors.PropertyDescriptors
                         list.Clear();
                         foreach (var rel in om)
                         {
-                            list.Add(new EntityRelationship(rel, parententityname, link.FXB));
+                            list.Add(new EntityRelationship(rel, EntityRole.Referenced, parententityname, link.FXB));
                         }
                         list.Sort();
                         listBox.Items.AddRange(list.ToArray());
@@ -256,7 +288,17 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors.PropertyDescriptors
                         list.Clear();
                         foreach (var rel in mm)
                         {
-                            list.Add(new EntityRelationship(rel, parententityname, link.FXB, greatparententityname));
+                            if (rel.Entity1LogicalName == parententityname ||
+                                rel.Entity1LogicalName == greatparententityname && rel.IntersectEntityName == parententityname)
+                            {
+                                list.Add(new EntityRelationship(rel, EntityRole.Referencing, parententityname, link.FXB, greatparententityname));
+                            }
+
+                            if (rel.Entity2LogicalName == parententityname ||
+                                rel.Entity2LogicalName == greatparententityname && rel.IntersectEntityName == parententityname)
+                            {
+                                list.Add(new EntityRelationship(rel, EntityRole.Referenced, parententityname, link.FXB, greatparententityname));
+                            }
                         }
                         list.Sort();
                         listBox.Items.AddRange(list.ToArray());

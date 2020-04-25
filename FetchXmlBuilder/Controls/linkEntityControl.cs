@@ -1,5 +1,6 @@
 ﻿using Cinteros.Xrm.FetchXmlBuilder.AppCode;
 using Cinteros.Xrm.FetchXmlBuilder.DockControls;
+using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Metadata;
 using System;
 using System.Collections.Generic;
@@ -87,7 +88,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.Controls
                     list.Clear();
                     foreach (var rel in mo)
                     {
-                        list.Add(new EntityRelationship(rel, parententityname, fxb));
+                        list.Add(new EntityRelationship(rel, EntityRole.Referencing, parententityname, fxb));
                     }
                     list.Sort();
                     cmbRelationship.Items.AddRange(list.ToArray());
@@ -98,7 +99,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.Controls
                     list.Clear();
                     foreach (var rel in om)
                     {
-                        list.Add(new EntityRelationship(rel, parententityname, fxb));
+                        list.Add(new EntityRelationship(rel, EntityRole.Referenced, parententityname, fxb));
                     }
                     list.Sort();
                     cmbRelationship.Items.AddRange(list.ToArray());
@@ -110,7 +111,15 @@ namespace Cinteros.Xrm.FetchXmlBuilder.Controls
                     list.Clear();
                     foreach (var rel in mm)
                     {
-                        list.Add(new EntityRelationship(rel, parententityname, fxb, greatparententityname));
+                        if (rel.Entity1LogicalName == parententityname)
+                        {
+                            list.Add(new EntityRelationship(rel, EntityRole.Referencing, parententityname, fxb, greatparententityname));
+                        }
+
+                        if (rel.Entity2LogicalName == parententityname)
+                        {
+                            list.Add(new EntityRelationship(rel, EntityRole.Referenced, parententityname, fxb, greatparententityname));
+                        }
                     }
                     list.Sort();
                     cmbRelationship.Items.AddRange(list.ToArray());

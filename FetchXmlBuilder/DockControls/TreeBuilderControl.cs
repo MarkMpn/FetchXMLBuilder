@@ -582,6 +582,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.DockControls
 
                         case "value":
                             ctrl = new valueControl(collec, this);
+                            descriptor = new ConditionTypeDescriptor(node, fxb, this);
                             break;
 
                         case "#comment":

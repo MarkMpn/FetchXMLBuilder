@@ -55,6 +55,12 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
         {
             var dictionary = (Dictionary<string, string>)_node.Tag;
 
+            // Same type descriptor used for <condition> and <value> nodes. If this is a <value> node, find the <condition>
+            var conditionNode = _node;
+            if (_node.Name == "value")
+                conditionNode = _node.Parent;
+            var conditionDictionary = (Dictionary<string, string>)conditionNode.Tag;
+
             var closestEntity = GetClosestEntityNode();
             var entities = new List<EntityNode>();
             if (closestEntity != null && closestEntity.Name == "entity")
@@ -77,7 +83,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 },
                 this,
                 String.Empty,
-                dictionary,
+                conditionDictionary,
                 "entity",
                 _tree,
                 entities.Select(e => e?.ToString()).ToArray());
@@ -106,7 +112,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 },
                 this,
                 String.Empty,
-                dictionary,
+                conditionDictionary,
                 "attribute",
                 _tree,
                 attributes);
@@ -126,7 +132,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 },
                 this,
                 ConditionOperator.Equal,
-                dictionary,
+                conditionDictionary,
                 "operator",
                 _tree,
                 attribute);
@@ -147,7 +153,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
 
                 if (_attributeTypes.TryGetValue(valueType.Value, out var convertedValueType))
                 {
-                    if (oper.IsMultipleValuesType)
+                    if (oper.IsMultipleValuesType && dictionary == conditionDictionary)
                         convertedValueType = convertedValueType.MakeArrayType();
 
                     var propertyDescriptorType = typeof(ConditionValuePropertyDescriptor<>).MakeGenericType(convertedValueType);
@@ -161,7 +167,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                         this,
                         null,
                         dictionary,
-                        "value",
+                        dictionary == conditionDictionary ? "value" : "#text",
                         _tree,
                         attribute,
                         _node,
@@ -169,10 +175,35 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                 }
             }
 
-            if (valueProp == null)
-                return new PropertyDescriptorCollection(new PropertyDescriptor[] { entityProp, attributeProp, operatorProp });
+            if (dictionary == conditionDictionary)
+            {
+                if (valueProp == null)
+                    return new PropertyDescriptorCollection(new PropertyDescriptor[] { entityProp, attributeProp, operatorProp });
+                else
+                    return new PropertyDescriptorCollection(new PropertyDescriptor[] { entityProp, attributeProp, operatorProp, valueProp });
+            }
             else
-                return new PropertyDescriptorCollection(new PropertyDescriptor[] { entityProp, attributeProp, operatorProp, valueProp });
+            {
+                if (valueProp == null)
+                {
+                    // We're in a <value> node but the parent <condition> doesn't expect a value. We still need to give the user an option
+                    // to edit this node though
+                    valueProp = new CustomPropertyDescriptor<string>(
+                        "Value",
+                        "Condition",
+                        1,
+                        1,
+                        "The value to compare the attribute to",
+                        Array.Empty<Attribute>(),
+                        this,
+                        null,
+                        dictionary,
+                        "#text",
+                        _tree);
+                }
+
+                return new PropertyDescriptorCollection(new PropertyDescriptor[] { valueProp });
+            }
         }
 
         public override PropertyDescriptorCollection GetProperties(Attribute[] attributes)

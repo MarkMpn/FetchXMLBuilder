@@ -24,13 +24,15 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors.PropertyDescriptors
     {
         private readonly TreeNode _node;
         private readonly FetchXmlBuilder _fxb;
+        private readonly string _entityName;
 
-        public ConditionValuePropertyDescriptor(string name, string category, int categoryOrder, int categoryCount, string description, Attribute[] attrs, object owner, T defaultValue, Dictionary<string,string> dictionary, string key, TreeBuilderControl tree, AttributeMetadata attribute, TreeNode node, FetchXmlBuilder fxb) :
+        public ConditionValuePropertyDescriptor(string name, string category, int categoryOrder, int categoryCount, string description, Attribute[] attrs, object owner, T defaultValue, Dictionary<string,string> dictionary, string key, TreeBuilderControl tree, string entityName, AttributeMetadata attribute, TreeNode node, FetchXmlBuilder fxb) :
             base(name, category, categoryOrder, categoryCount, description, CreateAttributes(attrs, attribute), owner, defaultValue, dictionary, key, tree)
         {
             AttributeMetadata = attribute;
             _node = node;
             _fxb = fxb;
+            _entityName = entityName;
         }
 
         static Attribute[] CreateAttributes(Attribute[] attributes, AttributeMetadata attribute)
@@ -56,7 +58,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors.PropertyDescriptors
             {
                 attrs.Add(new TypeConverterAttribute(typeof(OptionSetValueConverter)));
             }
-            else if (attribute is LookupAttributeMetadata || attribute is UniqueIdentifierAttributeMetadata)
+            else if (attribute is LookupAttributeMetadata || attribute is UniqueIdentifierAttributeMetadata || attribute.AttributeType == AttributeTypeCode.Uniqueidentifier)
             {
                 attrs.Add(new EditorAttribute(typeof(LookupEditor), typeof(UITypeEditor)));
                 attrs.Add(new TypeConverterAttribute(typeof(LookupConverter)));
@@ -79,6 +81,11 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors.PropertyDescriptors
                 if (AttributeMetadata is UniqueIdentifierAttributeMetadata guid)
                 {
                     return new[] { guid.EntityLogicalName };
+                }
+
+                if (AttributeMetadata.AttributeType == AttributeTypeCode.Uniqueidentifier)
+                {
+                    return new[] { _entityName };
                 }
 
                 return Array.Empty<string>();
@@ -413,6 +420,11 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors.PropertyDescriptors
         {
             if (destinationType == typeof(string))
             {
+                if (value == null)
+                {
+                    return null;
+                }
+
                 if (!(value is EntityReference entRef))
                 {
                     entRef = ((Lookup)value).EntityReference;

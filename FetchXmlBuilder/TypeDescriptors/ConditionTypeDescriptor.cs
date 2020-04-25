@@ -162,6 +162,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors
                         dictionary,
                         dictionary == conditionDictionary ? "value" : "#text",
                         Tree,
+                        entityName,
                         attribute,
                         Node,
                         FXB);

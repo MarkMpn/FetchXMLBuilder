@@ -31,7 +31,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors.PropertyDescriptors
         {
             var entityName = (string)GetValue(context.Instance);
 
-            if (!String.IsNullOrEmpty(entityName) && Entities != null && !Entities.Contains(entityName))
+            if (!String.IsNullOrEmpty(entityName) && Entities != null && Entities.Length > 0 && !Entities.Contains(entityName))
                 return "Unknown entity";
 
             return base.GetValidationError(context);

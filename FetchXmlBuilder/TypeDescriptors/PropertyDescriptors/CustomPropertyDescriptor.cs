@@ -201,6 +201,23 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors.PropertyDescriptors
 
         public virtual string GetValidationError(ITypeDescriptorContext context)
         {
+            if (Converter?.GetStandardValuesSupported() == true)
+            {
+                var value = GetValue(context.Instance);
+
+                if (value == null || value is string s && String.IsNullOrEmpty(s))
+                {
+                    return null;
+                }
+
+                var values = Converter.GetStandardValues(context);
+
+                if (values.Count > 0 && !values.OfType<object>().Any(o => o.Equals(value)))
+                {
+                    return "Unknown value";
+                }
+            }
+
             return null;
         }
     }

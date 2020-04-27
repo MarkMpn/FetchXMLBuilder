@@ -58,7 +58,7 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors.PropertyDescriptors
             {
                 attrs.Add(new TypeConverterAttribute(typeof(OptionSetValueConverter)));
             }
-            else if (attribute is LookupAttributeMetadata || attribute is UniqueIdentifierAttributeMetadata || attribute.AttributeType == AttributeTypeCode.Uniqueidentifier)
+            else if (attribute is LookupAttributeMetadata || attribute is UniqueIdentifierAttributeMetadata || attribute?.AttributeType == AttributeTypeCode.Uniqueidentifier)
             {
                 attrs.Add(new EditorAttribute(typeof(LookupEditor), typeof(UITypeEditor)));
                 attrs.Add(new TypeConverterAttribute(typeof(LookupConverter)));

@@ -30,7 +30,9 @@ namespace Cinteros.Xrm.FetchXmlBuilder.TypeDescriptors.PropertyDescriptors
 
         public override string GetValidationError(ITypeDescriptorContext context)
         {
-            if (Attributes != null && !AttributeMetadata.Any(a => a.LogicalName == (string)GetValue(context.Instance)))
+            var value = (string)GetValue(context.Instance);
+
+            if (!String.IsNullOrEmpty(value) && AttributeMetadata != null && AttributeMetadata.Length > 0 && !AttributeMetadata.Any(a => a.LogicalName == value))
             {
                 return "Unknown attribute";
             }
